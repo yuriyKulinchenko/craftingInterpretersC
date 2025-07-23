@@ -24,7 +24,7 @@ void writeChunk(Chunk* chunk, uint8_t byte) {
         chunk->capacity = oldCapacity < 8 ? 8 : oldCapacity * 2;
         chunk->code = reallocate(chunk->code, oldCapacity, chunk->capacity);
     }
-    chunk->code[chunk->capacity++] = byte;
+    chunk->code[chunk->count++] = byte;
 }
 
 void freeChunk(Chunk* chunk) {

@@ -6,4 +6,6 @@ set(CMAKE_C_STANDARD 11)
 add_executable(craftingInterpretersC main.c
         common.h
         chunk.h
-        chunk.c)
+        chunk.c
+        debug.h
+        debug.c)
