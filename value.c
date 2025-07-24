@@ -13,7 +13,7 @@ void writeValueArray(ValueArray* array, Value value) {
     if (array->capacity < array->count + 1) {
         const uint8_t oldCapacity = array->capacity;
         array->capacity = oldCapacity < 8 ? 8 : 2 * oldCapacity;
-        array->values = reallocate(array->values, oldCapacity, array->capacity);
+        array->values = GROW_ARRAY(Value, array->values, oldCapacity, array->capacity);
     }
     array->values[array->count++] = value;
 }

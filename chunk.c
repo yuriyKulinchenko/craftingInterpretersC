@@ -1,6 +1,7 @@
 #include "chunk.h"
 #include "memory.h"
 #include <stdlib.h>
+#include <stdio.h>
 
 void initChunk(Chunk* chunk) {
     chunk->count = 0;
@@ -14,8 +15,8 @@ void writeChunk(Chunk* chunk, uint8_t byte, int line) {
     if (chunk->capacity < chunk->count + 1) {
         const int oldCapacity = chunk->capacity;
         chunk->capacity = oldCapacity < 8 ? 8 : oldCapacity * 2;
-        chunk->code = reallocate(chunk->code, oldCapacity, chunk->capacity);
-        chunk->lines = reallocate(chunk->lines, oldCapacity, chunk->capacity);
+        chunk->code = GROW_ARRAY(uint8_t, chunk->code, oldCapacity, chunk->capacity);
+        chunk->lines = GROW_ARRAY(int, chunk->lines, oldCapacity, chunk->capacity);
     }
     chunk->code[chunk->count] = byte;
     chunk->lines[chunk->count] = line;

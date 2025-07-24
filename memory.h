@@ -7,6 +7,9 @@
 
 #include "common.h"
 
+#define GROW_ARRAY(type, pointer, oldCount, newCount) \
+(type*)reallocate(pointer, (oldCount) * sizeof(type), (newCount) * sizeof(type))
+
 void* reallocate(void* p, size_t oldSize, size_t newSize);
 
 #endif
