@@ -22,3 +22,7 @@ void writeValueArray(ValueArray* array, Value value) {
 void freeValueArray(ValueArray* array) {
     reallocate(array->values, array->capacity, 0);
 }
+
+void printValue(Value value) {
+    printf("%g", value);
+}
