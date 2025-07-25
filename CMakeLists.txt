@@ -14,4 +14,8 @@ add_executable(craftingInterpretersC main.c
         memory.h
         memory.c
         vm.h
-        vm.c)
+        vm.c
+        compiler.h
+        compiler.c
+        scanner.h
+        scanner.c)
