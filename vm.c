@@ -76,7 +76,6 @@ InterpretResult run() {
         uint8_t instruction;
         switch (instruction = READ_BYTE()) {
             case OP_RETURN: {
-                printf("      ");
                 printValue(pop());
                 printf("\n");
                 return INTERPRET_OK;
@@ -97,6 +96,9 @@ InterpretResult run() {
                 push(constant);
                 break;
             }
+            case OP_TRUE: push(BOOL_VAL(true)); break;
+            case OP_FALSE: push(BOOL_VAL(false)); break;
+            case OP_NIL: push(NIL_VAL); break;
         }
     }
 #undef READ_CONSTANT
