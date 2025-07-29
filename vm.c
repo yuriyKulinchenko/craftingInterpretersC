@@ -48,6 +48,10 @@ Value peek(int n) {
     return vm.stackTop[-1 - n];
 }
 
+static bool isFalsey(Value value) {
+    return IS_NIL(value) || (IS_BOOL(value) && !AS_BOOL(value));
+}
+
 InterpretResult run() {
 #define READ_BYTE() (*vm.ip++)
 #define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
@@ -91,6 +95,8 @@ InterpretResult run() {
                 push(NUMBER_VAL(-AS_NUMBER(pop())));
                 break;
             }
+            case OP_NOT: push(BOOL_VAL(isFalsey(pop()))); break;
+
             case OP_CONSTANT: {
                 Value constant = READ_CONSTANT();
                 push(constant);
