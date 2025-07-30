@@ -118,9 +118,8 @@ InterpretResult run() {
                 }
                 switch (a.type) {
                     case VAL_NIL: push(BOOL_VAL(true)); break;
-                    case VAL_NUMBER: push(BOOL_VAL(a.as.number == b.as.number)); break;
-                    case VAL_BOOL: push(BOOL_VAL(a.as.boolean == b.as.boolean)); break;
-
+                    case VAL_NUMBER: push(BOOL_VAL(AS_NUMBER(a) == AS_NUMBER(b))); break;
+                    case VAL_BOOL: push(BOOL_VAL(AS_BOOL(a) == AS_BOOL(b))); break;
                 }
             }
 
