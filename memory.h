@@ -12,6 +12,11 @@
 #define GROW_ARRAY(type, pointer, oldCount, newCount) \
 (type*)reallocate(pointer, (oldCount) * sizeof(type), (newCount) * sizeof(type))
 
+#define FREE_ARRAY(type, pointer, oldCount) GROW_ARRAY(type, pointer, oldCount, 0)
+
+#define FREE(type, pointer) reallocate(pointer, sizeof(type), 0)
+
 void* reallocate(void* p, size_t oldSize, size_t newSize);
+void freeObjects();
 
 #endif
