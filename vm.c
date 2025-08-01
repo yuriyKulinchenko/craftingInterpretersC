@@ -6,6 +6,8 @@
 
 #include "debug.h"
 #include "compiler.h"
+#include "memory.h"
+#include "object.h"
 
 VM vm;
 
@@ -80,6 +82,19 @@ static bool valuesEqual(Value a, Value b) {
     }
 }
 
+void concatenate() {
+    ObjString* bString = AS_STRING(pop());
+    ObjString* aString = AS_STRING(pop());
+    // Dynamically allocate new object
+    int length = aString->length + bString->length;
+    char* chars = ALLOCATE(char, length + 1);
+    memcpy(chars, aString->chars, aString->length);
+    memcpy(chars + aString->length, bString->chars, bString->length);
+    chars[length] = '\0';
+    ObjString* result = takeString(chars, length);
+    push(OBJ_VAL(result));
+}
+
 InterpretResult run() {
 #define READ_BYTE() (*vm.ip++)
 #define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
@@ -112,7 +127,6 @@ InterpretResult run() {
                 printf("\n");
                 return INTERPRET_OK;
             }
-            case OP_ADD: BINARY_OP(NUMBER_VAL, +); break;
             case OP_SUBTRACT: BINARY_OP(NUMBER_VAL, -); break;
             case OP_MULTIPLY: BINARY_OP(NUMBER_VAL, *); break;
             case OP_DIVIDE: BINARY_OP(NUMBER_VAL, /); break;
@@ -122,6 +136,15 @@ InterpretResult run() {
             case OP_FALSE: push(BOOL_VAL(false)); break;
             case OP_NIL: push(NIL_VAL); break;
             case OP_NOT: push(BOOL_VAL(isFalsey(pop()))); break;
+
+            case OP_ADD: {
+                if (IS_STRING(peek(0)) && IS_STRING(peek(1))) {
+                    concatenate();
+                    break;
+                }
+                BINARY_OP(NUMBER_VAL, +);
+                break;
+            }
 
             case OP_NEGATE: {
                 if (!IS_NUMBER(peek(0))) {
