@@ -2,6 +2,8 @@
 #include "common.h"
 #include <stdio.h>
 #include <stdarg.h>
+#include <string.h>
+
 #include "debug.h"
 #include "compiler.h"
 
@@ -50,6 +52,32 @@ Value peek(int n) {
 
 static bool isFalsey(Value value) {
     return IS_NIL(value) || (IS_BOOL(value) && !AS_BOOL(value));
+}
+
+static bool objEqual(Obj* aPtr, Obj* bPtr) {
+    if (aPtr->type != bPtr->type) return false;
+
+    switch (aPtr->type) {
+        case OBJ_STRING: {
+            ObjString* aString = (ObjString*) aPtr;
+            ObjString* bString = (ObjString*) bPtr;
+            return aString->length == bString->length &&
+                memcmp(aString->chars, bString->chars, aString->length) == 0;
+        }
+        default: return false;
+    }
+}
+
+static bool valuesEqual(Value a, Value b) {
+    if (a.type != b.type) return false;
+
+    switch (a.type) {
+        case VAL_NIL: return true;
+        case VAL_NUMBER: return AS_NUMBER(a) == AS_NUMBER(b);
+        case VAL_BOOL: return AS_BOOL(a) == AS_BOOL(b);
+        case VAL_OBJ: return objEqual(AS_OBJ(a), AS_OBJ(b));
+        default: return false;
+    }
 }
 
 InterpretResult run() {
@@ -112,15 +140,8 @@ InterpretResult run() {
             case OP_EQUAL: {
                 Value a = pop();
                 Value b = pop();
-                if (a.type != b.type) {
-                    push(BOOL_VAL(false));
-                    break;
-                }
-                switch (a.type) {
-                    case VAL_NIL: push(BOOL_VAL(true)); break;
-                    case VAL_NUMBER: push(BOOL_VAL(AS_NUMBER(a) == AS_NUMBER(b))); break;
-                    case VAL_BOOL: push(BOOL_VAL(AS_BOOL(a) == AS_BOOL(b))); break;
-                }
+                push(BOOL_VAL(valuesEqual(a, b)));
+                break;
             }
 
         }

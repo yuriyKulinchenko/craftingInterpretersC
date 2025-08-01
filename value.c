@@ -2,6 +2,8 @@
 #include "memory.h"
 #include <stdio.h>
 
+#include "object.h"
+
 void initValueArray(ValueArray* array) {
     array->count = 0;
     array->capacity = 0;
@@ -36,6 +38,17 @@ void printValue(Value value) {
         case VAL_BOOL: {
             printf(AS_BOOL(value) ? "true" : "false");
             break;
+        }
+
+        case VAL_OBJ: {
+            Obj* objPtr = AS_OBJ(value);
+            switch (objPtr->type) {
+                case OBJ_STRING: {
+                    printf("\"%s\"",((ObjString*) objPtr)->chars);
+                    break;
+                }
+                default: printf("unrecognized object"); break;
+            }
         }
     }
 }
