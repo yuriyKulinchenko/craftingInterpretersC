@@ -30,6 +30,7 @@ struct ObjString { // Can be safely cast to Obj
     Obj obj;
     int length;
     char* chars;
+    uint32_t hash;
 };
 
 
