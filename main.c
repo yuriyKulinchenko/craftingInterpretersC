@@ -67,12 +67,13 @@ void tableSetCustom(Table *table, char* chars, Value value) {
 
 int main(int argc, const char* argv[]) {
 
+    initVM();
     Table table;
     initTable(&table);
     tableSetCustom(&table, "a", NUMBER_VAL(1));
+    tableSetCustom(&table, "a", NUMBER_VAL(2));
     printTable(&table);
-
-
+    freeVM();
     return 0;
     initVM();
 

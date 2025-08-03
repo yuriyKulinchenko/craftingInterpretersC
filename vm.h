@@ -32,4 +32,6 @@ InterpretResult interpret(const char* source);
 void push();
 Value pop();
 
+void printObjects();
+
 #endif

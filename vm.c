@@ -192,3 +192,12 @@ InterpretResult interpret(const char* source) {
     freeChunk(&chunk);
     return result;
 }
+
+void printObjects() {
+    Obj* ptr = vm.objects;
+    while (ptr != NULL) {
+        ObjString* string = (ObjString*) ptr;
+        printf("%s\n", string->chars);
+        ptr = ptr->next;
+    }
+}

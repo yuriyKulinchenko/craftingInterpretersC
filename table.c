@@ -9,6 +9,7 @@
 #include "value.h"
 
 #define TABLE_MAX_LOAD 0.75
+#define TABLE_DEBUG
 
 void initTable(Table* table) {
     table->count = 0;
@@ -26,7 +27,7 @@ Entry* findEntry(Entry* entries, int capacity, ObjString* key) {
     // If this is not present, returns first empty slot
     // If any tombstones are encountered on the way, the tombstone is returned
     Entry* tombstone = NULL;
-    int index = (int) key->hash % capacity;
+    int index = (int) (key->hash % capacity);
     for (;;) {
         Entry* entry = &entries[index];
 
@@ -112,8 +113,6 @@ bool tableDelete(Table* table, ObjString* key) {
     entry->value = BOOL_VAL(true); // Tombstone added
     return true;
 }
-
-#define TABLE_DEBUG
 
 void printTable(Table* table) {
     printf("{");
