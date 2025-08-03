@@ -3,6 +3,9 @@
 #include "memory.h"
 #include "object.h"
 #include "table.h"
+
+#include <stdio.h>
+
 #include "value.h"
 
 #define TABLE_MAX_LOAD 0.75
@@ -45,8 +48,8 @@ Entry* findEntry(Entry* entries, int capacity, ObjString* key) {
 void adjustCapacity(Table* table, int capacity) {
     Entry* entries = ALLOCATE(Entry, capacity);
     for (int i = 0; i < capacity; i++) {
-        entries->key = NULL;
-        entries->value = BOOL_VAL(false);
+        entries[i].key = NULL;
+        entries[i].value = BOOL_VAL(false);
     }
 
     // Now, hashes must be recomputed, entries put in etc
@@ -77,7 +80,6 @@ bool tableSet(Table* table, ObjString* key, Value value) {
     Entry* entry = findEntry(table->entries, table->capacity, key);
     bool isNewKey = entry->key == NULL;
     if (isNewKey && !AS_BOOL(entry->value)) table->count++;
-
     entry->key = key;
     entry->value = value;
     return isNewKey;
@@ -109,4 +111,60 @@ bool tableDelete(Table* table, ObjString* key) {
     entry->key = NULL;
     entry->value = BOOL_VAL(true); // Tombstone added
     return true;
+}
+
+#define TABLE_DEBUG
+
+void printTable(Table* table) {
+    printf("{");
+    bool isFirst = true;
+    for (int i = 0; i < table->capacity; i++) {
+        Entry* entry = &table->entries[i];
+        if (entry->key == NULL) continue;
+
+        if (isFirst) {
+            isFirst = false;
+        } else {
+            printf(", ");
+        }
+
+        printf("%s -> ", entry->key->chars);
+        printValue(entry->value);
+    }
+    printf("}");
+
+#ifdef TABLE_DEBUG
+    printf("\n");
+    printf("===TABLE_DEBUG===\n");
+    printf("count: %d, ", table->count);
+    printf("capacity: %d", table->capacity);
+
+    printf("\n[");
+    isFirst = true;
+    for (int i = 0; i < table->capacity; i++) {
+        Entry* entry = &table->entries[i];
+
+        if (isFirst) {
+            isFirst = false;
+        } else {
+            printf(", ");
+        }
+
+
+        if (entry->key == NULL) {
+            if (AS_BOOL(entry->value)) {
+                printf("TOMBSTONE");
+            } else {
+                printf("NULL");
+            }
+        } else {
+            printf("VALUE");
+        }
+    }
+    printf("]\n");
+    printf("===END_TABLE_DEBUG===\n");
+#endif
+
+
+
 }

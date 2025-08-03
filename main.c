@@ -57,7 +57,23 @@ static void runFile(const char* path) {
     if (result == INTERPRET_RUNTIME_ERROR) exit(70);
 }
 
+#include "table.h"
+#include "object.h"
+
+void tableSetCustom(Table *table, char* chars, Value value) {
+    int length = (int) strlen(chars);
+    tableSet(table, takeString(chars, length), value);
+}
+
 int main(int argc, const char* argv[]) {
+
+    Table table;
+    initTable(&table);
+    tableSetCustom(&table, "a", NUMBER_VAL(1));
+    printTable(&table);
+
+
+    return 0;
     initVM();
 
     if (argc == 1) {
