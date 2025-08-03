@@ -26,10 +26,18 @@ Entry* findEntry(Entry* entries, int capacity, ObjString* key) {
     int index = (int) key->hash % capacity;
     for (;;) {
         Entry* entry = &entries[index];
-        bool isNull = entry->key == NULL && !AS_BOOL(entry->value); // Is not null if tombstone
-        if (isNull || entry->key == key) { // BAD - uses reference equality
-            return entry;
+
+        if (entry->key == NULL) {
+            if (AS_BOOL(entry->value)) {
+                tombstone = entry;
+            } else {
+                if (tombstone != NULL) return tombstone;
+                return entry;
+            }
         }
+
+        if (entry->key == key) return entry;
+
         index = (index + 1) % capacity;
     }
 }
@@ -46,7 +54,7 @@ void adjustCapacity(Table* table, int capacity) {
     int count = 0;
     for (int i = 0; i < table->capacity; i++) {
         Entry* entry = &table->entries[i];
-        if (entry->key == NULL) continue;
+        if (entry->key == NULL) continue; // Skips tombstones as well
 
         Entry* position = findEntry(entries, capacity, entry->key);
         position->key = entry->key;
@@ -68,7 +76,7 @@ bool tableSet(Table* table, ObjString* key, Value value) {
     // Guaranteed to have space now:
     Entry* entry = findEntry(table->entries, table->capacity, key);
     bool isNewKey = entry->key == NULL;
-    if (isNewKey) table->count++;
+    if (isNewKey && !AS_BOOL(entry->value)) table->count++;
 
     entry->key = key;
     entry->value = value;
@@ -81,7 +89,7 @@ bool tableGet(Table* table, ObjString* key, Value* value) {
     if (table->count == 0) return false;
 
     Entry* entry = findEntry(table->entries, table->capacity, key);
-    if (entry->key != NULL) return false;
+    if (entry->key == NULL) return false;
 
     *value = entry->value;
     return true;
@@ -92,4 +100,13 @@ void tableAddAll(Table* from, Table* to) {
         Entry* fromEntry = &from->entries[i];
         if (fromEntry->key != NULL) tableSet(to, fromEntry->key, fromEntry->value);
     }
+}
+
+bool tableDelete(Table* table, ObjString* key) {
+    if (table->count == 0) return false;
+    Entry* entry = findEntry(table->entries, table->capacity, key);
+    if (entry->key == NULL) return false;
+    entry->key = NULL;
+    entry->value = BOOL_VAL(true); // Tombstone added
+    return true;
 }
