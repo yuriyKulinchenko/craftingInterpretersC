@@ -32,7 +32,7 @@ static void runtimeError(const char* format, ...) {
 
 void initVM() {
     resetStack();
-    vm.objects == NULL;
+    vm.objects = NULL;
 }
 
 void freeVM() {
@@ -197,7 +197,8 @@ void printObjects() {
     Obj* ptr = vm.objects;
     while (ptr != NULL) {
         ObjString* string = (ObjString*) ptr;
-        printf("%s\n", string->chars);
+        printf("%s -> ", string->chars);
         ptr = ptr->next;
     }
+    printf("NULL");
 }

@@ -62,7 +62,7 @@ static void runFile(const char* path) {
 
 void tableSetCustom(Table *table, char* chars, Value value) {
     int length = (int) strlen(chars);
-    tableSet(table, takeString(chars, length), value);
+    tableSet(table, copyString(chars, length), value);
 }
 
 int main(int argc, const char* argv[]) {
@@ -71,8 +71,6 @@ int main(int argc, const char* argv[]) {
     Table table;
     initTable(&table);
     tableSetCustom(&table, "a", NUMBER_VAL(1));
-    tableSetCustom(&table, "a", NUMBER_VAL(2));
-    printTable(&table);
     freeVM();
     return 0;
     initVM();
