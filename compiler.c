@@ -50,6 +50,9 @@ static void statement();
 static ParseRule* getRule(TokenType type);
 static void parsePrecedence(Precedence precedence);
 
+static bool match(TokenType type);
+static void advance();
+
 ParseRule rules[] = {
     [TOKEN_LEFT_PAREN] = {grouping, NULL, PREC_NONE},
     [TOKEN_RIGHT_PAREN] = {NULL, NULL, PREC_NONE},
@@ -125,6 +128,28 @@ static void errorAtCurrent(char* message) {
 
 static void error(const char* message) {
     errorAt(&parser.previous, message);
+}
+
+static void synchronize() {
+    parser.panicMode = false;
+    while (parser.current.type != TOKEN_EOF) {
+        if (parser.previous.type == TOKEN_SEMICOLON) return;
+        switch (parser.current.type) {
+            case TOKEN_CLASS:
+            case TOKEN_FUN:
+            case TOKEN_VAR:
+            case TOKEN_FOR:
+            case TOKEN_IF:
+            case TOKEN_WHILE:
+            case TOKEN_PRINT:
+            case TOKEN_RETURN:
+                return;
+            default:
+                // Do nothing.
+                ;
+        }
+        advance();
+    }
 }
 
 static void advance() {
@@ -273,8 +298,29 @@ static void binary() {
     }
 }
 
-static void varDeclaration() {
+static uint8_t identifierConstant(Token* name) {
+    return makeConstant(OBJ_VAL(copyString(name->start, name->length)));
+}
 
+static uint8_t parseVariable(const char* errorMessage) {
+    consume(TOKEN_IDENTIFIER, errorMessage);
+    return identifierConstant(&parser.previous);
+}
+
+static void defineVariable(uint8_t global) {
+    emitBytes(OP_DEFINE_GLOBAL, global);
+}
+
+static void varDeclaration() {
+    // 'var' has already been consumed
+    uint8_t global = parseVariable("Expect variable name");
+    if (match(TOKEN_EQUAL)) {
+        expression();
+    } else {
+        emitByte(OP_NIL);
+    }
+    consume(TOKEN_SEMICOLON, "Expect ';' at end of declaration");
+    defineVariable(global);
 }
 
 static void printStatement() {
@@ -295,6 +341,7 @@ static void declaration() {
     } else {
         statement();
     }
+    if (parser.panicMode) synchronize();
 }
 
 static void statement() {

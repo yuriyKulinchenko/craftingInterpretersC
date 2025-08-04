@@ -158,6 +158,15 @@ InterpretResult run() {
                 break;
             }
 
+            case OP_DEFINE_GLOBAL: {
+                Value target = READ_CONSTANT();
+                Value top = pop();
+                printValue(target);
+                printf(" <- ");
+                printValue(top);
+                printf("\n");
+            }
+
             case OP_EQUAL: {
                 Value a = pop();
                 Value b = pop();
