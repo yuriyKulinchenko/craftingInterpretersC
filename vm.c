@@ -168,6 +168,18 @@ InterpretResult run() {
                 break;
             }
 
+            case OP_GET_GLOBAL: {
+                ObjString* identifier = READ_STRING();
+                Value value;
+                bool globalExists = tableGet(&vm.globals, identifier, &value);
+                if (globalExists) {
+                    push(value);
+                } else {
+                    runtimeError("variable is not defined");
+                }
+                break;
+            }
+
             case OP_EQUAL: {
                 Value a = pop();
                 Value b = pop();
