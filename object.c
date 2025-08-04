@@ -2,6 +2,7 @@
 #include <string.h>
 #include "memory.h"
 #include "object.h"
+#include "table.h"
 
 #include "value.h"
 
@@ -32,17 +33,33 @@ static ObjString* allocateString(char* chars, int length, uint32_t hash) {
     string->length = length;
     string->chars = chars;
     string->hash = hash;
+
+    tableSet(&vm.strings, string, NIL_VAL);
+
     return string;
 }
 
 ObjString* takeString(char* chars, int length) {
     uint32_t hash = hashString(chars, length);
+    ObjString* interned = tableFindString(&vm.strings, chars, length, hash);
+    if (interned != NULL) {
+        FREE_ARRAY(char, chars, length + 1);
+        return interned;
+    }
+
+
     return allocateString(chars, length, hash);
 }
 
-ObjString* copyString(const char* chars, int length) {
+ObjString* copyString(char* chars, int length) {
     // Goal is to return an object class
+    // If the string already exists, the reference to its duplicate is returned
     uint32_t hash = hashString(chars, length);
+    ObjString* interned = tableFindString(&vm.strings, chars, length, hash);
+    if (interned != NULL) return interned;
+    // Do not assume ownership of chars, it cannot yet be freed
+
+
     char* copiedChars = ALLOCATE(char, length + 1);
     memcpy(copiedChars, chars, length);
     copiedChars[length] = '\0';

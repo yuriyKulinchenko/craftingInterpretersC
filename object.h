@@ -35,7 +35,7 @@ struct ObjString { // Can be safely cast to Obj
 
 
 ObjString* takeString(char* chars, int length);
-ObjString* copyString(const char* chars, int length);
+ObjString* copyString(char* chars, int length);
 
 static inline bool isObjType(Value value, ObjType type) {
     if (!IS_OBJ(value)) return false;

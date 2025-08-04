@@ -33,10 +33,12 @@ static void runtimeError(const char* format, ...) {
 void initVM() {
     resetStack();
     vm.objects = NULL;
+    initTable(&vm.strings);
 }
 
 void freeVM() {
     freeObjects();
+    freeTable(&vm.strings);
 }
 
 void push(Value value) {
@@ -62,10 +64,7 @@ static bool objEqual(Obj* aPtr, Obj* bPtr) {
 
     switch (aPtr->type) {
         case OBJ_STRING: {
-            ObjString* aString = (ObjString*) aPtr;
-            ObjString* bString = (ObjString*) bPtr;
-            return aString->length == bString->length &&
-                memcmp(aString->chars, bString->chars, aString->length) == 0;
+            return aPtr == bPtr; // Reference equality now works because of interning
         }
         default: return false;
     }
@@ -202,3 +201,4 @@ void printObjects() {
     }
     printf("NULL");
 }
+

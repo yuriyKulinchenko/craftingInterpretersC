@@ -7,6 +7,7 @@
 
 #include "chunk.h"
 #include "value.h"
+#include "table.h"
 
 typedef enum {
     INTERPRET_OK,
@@ -22,6 +23,7 @@ typedef struct {
     Value stack[STACK_MAX];
     Value* stackTop;
     Obj* objects;
+    Table strings;
 } VM;
 
 extern VM vm;

@@ -62,17 +62,21 @@ static void runFile(const char* path) {
 
 void tableSetCustom(Table *table, char* chars, Value value) {
     int length = (int) strlen(chars);
-    tableSet(table, copyString(chars, length), value);
+    char* allocatedString = malloc(sizeof(char) * (length + 1));
+    memcpy(allocatedString, chars, length);
+    allocatedString[length] = '\0';
+    tableSet(table, copyString(allocatedString, length), value);
+}
+
+void tableDeleteCustom(Table *table, char* chars) {
+    int length = (int) strlen(chars);
+    char* allocatedString = malloc(sizeof(char) * (length + 1));
+    memcpy(allocatedString, chars, length);
+    allocatedString[length] = '\0';
+    tableDelete(table, copyString(allocatedString, length));
 }
 
 int main(int argc, const char* argv[]) {
-
-    initVM();
-    Table table;
-    initTable(&table);
-    tableSetCustom(&table, "a", NUMBER_VAL(1));
-    freeVM();
-    return 0;
     initVM();
 
     if (argc == 1) {

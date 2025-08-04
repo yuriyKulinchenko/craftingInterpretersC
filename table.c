@@ -27,7 +27,7 @@ Entry* findEntry(Entry* entries, int capacity, ObjString* key) {
     // If this is not present, returns first empty slot
     // If any tombstones are encountered on the way, the tombstone is returned
     Entry* tombstone = NULL;
-    int index = (int) (key->hash % capacity);
+    uint32_t index =  key->hash % capacity;
     for (;;) {
         Entry* entry = &entries[index];
 
@@ -112,6 +112,20 @@ bool tableDelete(Table* table, ObjString* key) {
     entry->key = NULL;
     entry->value = BOOL_VAL(true); // Tombstone added
     return true;
+}
+
+ObjString* tableFindString(Table* table, char* chars, int length, uint32_t hash) {
+    // Return null if the string is not found
+    // previous reference equality check does not work here
+    if (table->count == 0) return NULL;
+    uint32_t index = hash % table->capacity;
+    for (;;) {
+        Entry* entry = &table->entries[index];
+        if (entry->key == NULL && !AS_BOOL(entry->value)) return NULL;
+        if (entry->key->hash == hash && entry->key->length == length &&
+            memcmp(chars, entry->key->chars, length) == 0) return entry->key;
+        index = (index + 1) % table->capacity;
+    }
 }
 
 void printTable(Table* table) {
