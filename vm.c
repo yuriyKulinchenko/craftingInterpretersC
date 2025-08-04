@@ -34,11 +34,13 @@ void initVM() {
     resetStack();
     vm.objects = NULL;
     initTable(&vm.strings);
+    initTable(&vm.globals);
 }
 
 void freeVM() {
     freeObjects();
     freeTable(&vm.strings);
+    freeTable(&vm.globals);
 }
 
 void push(Value value) {
@@ -98,6 +100,7 @@ void concatenate() {
 InterpretResult run() {
 #define READ_BYTE() (*vm.ip++)
 #define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
+#define READ_STRING() AS_STRING(READ_CONSTANT())
 #define BINARY_OP(valueType ,op) \
     do { \
         Value b = pop(); \
@@ -159,12 +162,10 @@ InterpretResult run() {
             }
 
             case OP_DEFINE_GLOBAL: {
-                Value target = READ_CONSTANT();
-                Value top = pop();
-                printValue(target);
-                printf(" <- ");
-                printValue(top);
-                printf("\n");
+                ObjString* identifier = READ_STRING();
+                tableSet(&vm.globals, identifier, peek(0));
+                pop();
+                break;
             }
 
             case OP_EQUAL: {
