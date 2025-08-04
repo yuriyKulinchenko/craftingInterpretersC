@@ -123,8 +123,6 @@ InterpretResult run() {
         uint8_t instruction;
         switch (instruction = READ_BYTE()) {
             case OP_RETURN: {
-                printValue(pop());
-                printf("\n");
                 return INTERPRET_OK;
             }
             case OP_SUBTRACT: BINARY_OP(NUMBER_VAL, -); break;
@@ -165,6 +163,11 @@ InterpretResult run() {
                 Value b = pop();
                 push(BOOL_VAL(valuesEqual(a, b)));
                 break;
+            }
+
+            case OP_PRINT: {
+                printValue(pop());
+                printf("\n");
             }
 
         }
