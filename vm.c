@@ -175,8 +175,20 @@ InterpretResult run() {
                 if (globalExists) {
                     push(value);
                 } else {
-                    runtimeError("variable is not defined");
+                    runtimeError("Undefined variable '%s'", identifier->chars);
+                    return INTERPRET_RUNTIME_ERROR;
                 }
+                break;
+            }
+
+            case OP_SET_GLOBAL : {
+                // Must already be defined
+                ObjString* identifier = READ_STRING();
+                if (!tableGet(&vm.globals, identifier, NULL)) {
+                    runtimeError("Undefined variable '%s'", identifier->chars);
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                tableSet(&vm.globals, identifier, peek(0)); // Left on stack
                 break;
             }
 
