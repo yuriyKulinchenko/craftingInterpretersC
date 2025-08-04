@@ -7,6 +7,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define QUICK_RUN
+
 static void repl() {
     char line[1024];
     for (;;) {
@@ -77,8 +79,12 @@ void tableDeleteCustom(Table *table, char* chars) {
 }
 
 int main(int argc, const char* argv[]) {
+#ifdef QUICK_RUN
     initVM();
-
+    runFile("../exampleCode.txt");
+    freeVM();
+    return 0;
+#endif
     if (argc == 1) {
         repl();
 
