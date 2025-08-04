@@ -168,6 +168,12 @@ InterpretResult run() {
             case OP_PRINT: {
                 printValue(pop());
                 printf("\n");
+                break;
+            }
+
+            case OP_POP: {
+                pop();
+                break;
             }
 
         }

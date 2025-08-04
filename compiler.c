@@ -280,11 +280,13 @@ static void varDeclaration() {
 static void printStatement() {
     expression();
     emitByte(OP_PRINT);
-    consume(TOKEN_SEMICOLON, "Expect ';' at end of print statement");
+    consume(TOKEN_SEMICOLON, "Expect ';' at end of statement");
 }
 
 static void expressionStatement() {
-
+    expression();
+    emitByte(OP_POP);
+    consume(TOKEN_SEMICOLON, "Expect ';' at end of statement");
 }
 
 static void declaration() {
