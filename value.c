@@ -76,7 +76,7 @@ ObjString* valueKey(Value value) {
         case VAL_OBJ: {
             Obj* object = AS_OBJ(value);
             switch (object->type) {
-                OBJ_STRING: {
+                case OBJ_STRING: {
                     prefix = "STRING"; break;
                 }
                 default: return NULL;

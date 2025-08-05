@@ -35,12 +35,14 @@ void initVM() {
     vm.objects = NULL;
     initTable(&vm.strings);
     initTable(&vm.globals);
+    initTable(&vm.constants);
 }
 
 void freeVM() {
     freeObjects();
     freeTable(&vm.strings);
     freeTable(&vm.globals);
+    freeTable(&vm.constants);
 }
 
 void push(Value value) {

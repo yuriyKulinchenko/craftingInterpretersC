@@ -207,11 +207,20 @@ static void endCompiler() {
 }
 
 static uint8_t makeConstant(Value value) {
+    Value returnValue;
+    ObjString* key = valueKey(value);
+    if (tableGet(&vm.constants, key, &returnValue)) {
+        return (uint8_t) AS_NUMBER(returnValue);
+    }
+
+
     int constant = addConstant(currentChunk(), value);
     if (constant > UINT8_MAX) {
         error("Too many constants in one chunk.");
         return 0;
     }
+
+    tableSet(&vm.constants, key, NUMBER_VAL(constant));
     return (uint8_t)constant;
 }
 
