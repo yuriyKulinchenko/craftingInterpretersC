@@ -349,6 +349,7 @@ static void addLocal(Token name) {
 
     Local* local = &current->locals[current->localCount++];
     local->name = name;
+    local->depth = -1;
     local->depth = current->scopeDepth;
 }
 
@@ -388,6 +389,7 @@ static uint8_t parseVariable(const char* errorMessage) {
 
 static void defineVariable(uint8_t global) {
     if (current->scopeDepth > 0) {
+        current->locals[current->localCount - 1].depth = current->scopeDepth;
         return; // Leave value on the stack
     }
 
@@ -396,7 +398,11 @@ static void defineVariable(uint8_t global) {
 
 int resolveLocal(Compiler* compiler, Token* token) {
     for (int i = compiler->localCount - 1; i >= 0; i--) {
-        if (identifiersEqual(token, &compiler->locals[i].name)) {
+        Local* local = &compiler->locals[i];
+        if (identifiersEqual(token, &local->name)) {
+            if (local->depth == -1) {
+                error("Can't read local variable in its own initializer.");
+            }
             return i;
         }
     }
