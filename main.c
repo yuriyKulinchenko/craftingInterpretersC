@@ -82,7 +82,6 @@ int main(int argc, const char* argv[]) {
 #ifdef QUICK_RUN
     initVM();
     runFile("../exampleCode.txt");
-    printTable(&vm.constants);
     freeVM();
     return 0;
 #endif

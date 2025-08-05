@@ -1,2 +1,6 @@
-"a";
-"a";
+{
+    print "hello world from inner scope!";
+    print 1;
+}
+
+print 2;
