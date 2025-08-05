@@ -177,7 +177,4 @@ void printTable(Table* table) {
     printf("]\n");
     printf("===END_TABLE_DEBUG===\n");
 #endif
-
-
-
 }

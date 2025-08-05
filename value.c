@@ -2,6 +2,7 @@
 #include "memory.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "object.h"
 
@@ -61,6 +62,33 @@ char* valueToString(Value value) {
         default: asprintf(&chars, "unrecognized value"); break;
     }
     return chars;
+}
+
+ObjString* valueKey(Value value) {
+    // Returns an ObjString* which can be used as a key to uniquely represent a value in a table
+    char* valueString = valueToString(value);
+    char* returnString;
+    char* prefix;
+    switch (value.type) {
+        case VAL_NIL: prefix = "NIL"; break;
+        case VAL_NUMBER: prefix = "NUMBER"; break;
+        case VAL_BOOL: prefix = "BOOL"; break;
+        case VAL_OBJ: {
+            Obj* object = AS_OBJ(value);
+            switch (object->type) {
+                OBJ_STRING: {
+                    prefix = "STRING"; break;
+                }
+                default: return NULL;
+            }
+            break;
+        }
+        default: return NULL;
+    }
+
+    asprintf(&returnString, "%s:%s", prefix, valueString);
+    free(valueString);
+    return takeString(returnString, (int) strlen(returnString));
 }
 
 void printValue(Value value) {
