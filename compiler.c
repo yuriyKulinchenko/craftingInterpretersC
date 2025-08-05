@@ -8,6 +8,7 @@
 #endif
 
 #include <stdlib.h>
+#include <string.h>
 
 typedef struct {
     Token current;
@@ -340,23 +341,86 @@ static uint8_t identifierConstant(Token* name) {
     return makeConstant(OBJ_VAL(copyString(name->start, name->length)));
 }
 
+static void addLocal(Token name) {
+    if (current->localCount == UINT8_COUNT) {
+        error("Too many local variables in function.");
+        return;
+    }
+
+    Local* local = &current->locals[current->localCount++];
+    local->name = name;
+    local->depth = current->scopeDepth;
+}
+
+static bool identifiersEqual(Token* a, Token* b) {
+    if (a->length != b->length) return false;
+    return memcmp(a->start, b->start, a->length) == 0;
+}
+
+static void declareVariable() {
+    // Variable re-declaration is possible in the global scope
+    if (current->scopeDepth == 0) return;
+
+    // Variable re-declaration is disallowed in the local scope
+    Token* name = &parser.previous;
+    for (int i = current->localCount - 1; i >= 0; i--) {
+        Local* local = &current->locals[i];
+        // Variable redeclaration becomes valid if out of scope:
+        if (local->depth != -1 && local->depth < current->scopeDepth) {
+            break;
+        }
+
+        if (identifiersEqual(name, &local->name)) {
+            error("variable is already defined with this scope");
+        }
+    }
+    addLocal(*name);
+}
+
 static uint8_t parseVariable(const char* errorMessage) {
     consume(TOKEN_IDENTIFIER, errorMessage);
+
+    declareVariable();
+    if (current->scopeDepth > 0) return 0; // Not needed
+
     return identifierConstant(&parser.previous);
 }
 
 static void defineVariable(uint8_t global) {
+    if (current->scopeDepth > 0) {
+        return; // Leave value on the stack
+    }
+
     emitBytes(OP_DEFINE_GLOBAL, global);
 }
 
+int resolveLocal(Compiler* compiler, Token* token) {
+    for (int i = compiler->localCount - 1; i >= 0; i--) {
+        if (identifiersEqual(token, &compiler->locals[i].name)) {
+            return i;
+        }
+    }
+    return -1;
+}
+
 static void namedVariable(Token name, bool canAssign) {
-    uint8_t arg = identifierConstant(&name);
+    uint8_t getOp, setOp;
+    int arg = resolveLocal(current, &name);
+    if (arg != -1) {
+        getOp = OP_GET_LOCAL;
+        setOp = OP_SET_LOCAL;
+    } else {
+        arg = identifierConstant(&name);
+        getOp = OP_GET_GLOBAL;
+        setOp = OP_SET_LOCAL;
+    }
+
 
     if (canAssign && match(TOKEN_EQUAL)) {
         expression();
-        emitBytes(OP_SET_GLOBAL, arg);
+        emitBytes(setOp, (uint8_t)arg);
     } else {
-        emitBytes(OP_GET_GLOBAL, arg);
+        emitBytes(getOp, (uint8_t)arg);
     }
 }
 
@@ -366,7 +430,7 @@ static void variable(bool canAssign) {
 
 static void varDeclaration() {
     // 'var' has already been consumed
-    uint8_t global = parseVariable("Expect variable name");
+    uint8_t global = parseVariable("Expect variable name"); // Unused if local
     if (match(TOKEN_EQUAL)) {
         expression();
     } else {
@@ -393,6 +457,13 @@ static void beginScope() {
 }
 
 static void endScope() {
+    // Clear all locals in current scope:
+    while (current->localCount > 0) {
+        Local* local = &current->locals[current->localCount - 1];
+        if (local->depth < current->scopeDepth) break;
+        emitByte(OP_POP);
+        current->localCount--;
+    }
     current->scopeDepth--;
 }
 

@@ -33,7 +33,7 @@ extern VM vm;
 void initVM();
 void freeVM();
 InterpretResult interpret(const char* source);
-void push();
+void push(Value value);
 Value pop();
 
 void printObjects();
