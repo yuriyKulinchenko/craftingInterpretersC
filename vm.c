@@ -61,29 +61,6 @@ static bool isFalsey(Value value) {
     return IS_NIL(value) || (IS_BOOL(value) && !AS_BOOL(value));
 }
 
-static bool objEqual(Obj* aPtr, Obj* bPtr) {
-    if (aPtr->type != bPtr->type) return false;
-
-    switch (aPtr->type) {
-        case OBJ_STRING: {
-            return aPtr == bPtr; // Reference equality now works because of interning
-        }
-        default: return false;
-    }
-}
-
-static bool valuesEqual(Value a, Value b) {
-    if (a.type != b.type) return false;
-
-    switch (a.type) {
-        case VAL_NIL: return true;
-        case VAL_NUMBER: return AS_NUMBER(a) == AS_NUMBER(b);
-        case VAL_BOOL: return AS_BOOL(a) == AS_BOOL(b);
-        case VAL_OBJ: return objEqual(AS_OBJ(a), AS_OBJ(b));
-        default: return false;
-    }
-}
-
 void concatenate() {
     ObjString* bString = AS_STRING(pop());
     ObjString* aString = AS_STRING(pop());

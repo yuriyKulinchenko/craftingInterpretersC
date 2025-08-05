@@ -68,3 +68,26 @@ void printValue(Value value) {
     printf(chars);
     free(chars);
 }
+
+bool objEqual(Obj* aPtr, Obj* bPtr) {
+    if (aPtr->type != bPtr->type) return false;
+
+    switch (aPtr->type) {
+        case OBJ_STRING: {
+            return aPtr == bPtr; // Reference equality now works because of interning
+        }
+        default: return false;
+    }
+}
+
+bool valuesEqual(Value a, Value b) {
+    if (a.type != b.type) return false;
+
+    switch (a.type) {
+        case VAL_NIL: return true;
+        case VAL_NUMBER: return AS_NUMBER(a) == AS_NUMBER(b);
+        case VAL_BOOL: return AS_BOOL(a) == AS_BOOL(b);
+        case VAL_OBJ: return objEqual(AS_OBJ(a), AS_OBJ(b));
+        default: return false;
+    }
+}
