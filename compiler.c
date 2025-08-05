@@ -490,12 +490,33 @@ static void declaration() {
     if (parser.panicMode) synchronize();
 }
 
+static int emitJump(OpCode type) {
+
+}
+
+static void patchJump(int location) {
+
+}
+
+static void ifStatement() {
+    consume(TOKEN_LEFT_PAREN, "Expect '(' before if condition");
+    expression();
+    consume(TOKEN_RIGHT_PAREN, "Expect ')' after if condition");
+
+    int thenJump = emitJump(OP_JUMP_IF_FALSE);
+    statement();
+
+    patchJump(thenJump);
+}
+
 static void statement() {
     if (match(TOKEN_PRINT)) {
         printStatement();
     } else if (match(TOKEN_LEFT_BRACE)) {
         block();
-    } else {
+    } else if (match(TOKEN_IF)) {
+        ifStatement();
+    }else {
         expressionStatement();
     }
 }

@@ -64,9 +64,11 @@ int disassembleInstruction(Chunk* chunk, int offset) {
         case OP_SET_GLOBAL:
             return constantInstruction("OP_SET_GLOBAL", chunk, offset);
         case OP_GET_LOCAL:
-            return byteInstruction("OP_GET_LOCAL", chunk, offset); // Incomplete
+            return byteInstruction("OP_GET_LOCAL", chunk, offset);
         case OP_SET_LOCAL:
-            return byteInstruction("OP_SET_LOCAL", chunk, offset); // Incomplete
+            return byteInstruction("OP_SET_LOCAL", chunk, offset);
+        case OP_JUMP_IF_FALSE:
+            return byteInstruction("OP_JUMP_IF_FALSE", chunk, offset);
         case OP_TRUE:
             return simpleInstruction("OP_TRUE", offset);
         case OP_FALSE:

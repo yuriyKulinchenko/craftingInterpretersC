@@ -201,6 +201,10 @@ InterpretResult run() {
                 break;
             }
 
+            case OP_JUMP_IF_FALSE: {
+
+            }
+
         }
     }
 #undef READ_CONSTANT
