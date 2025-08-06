@@ -1,3 +1,5 @@
-var i = false;
-i = true;
-print i;
+{
+    var a;
+    var b;
+    var c;
+}

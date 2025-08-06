@@ -49,6 +49,7 @@ typedef struct {
     Local locals[UINT8_COUNT];
     int localCount;
     int scopeDepth;
+    int popCount;
 } Compiler;
 
 static void binary(bool canAssign);
@@ -133,6 +134,7 @@ Chunk* compilingChunk;
 void initCompiler(Compiler* compiler) {
     compiler->localCount = 0;
     compiler->scopeDepth = 0;
+    compiler->popCount = 0;
     current = compiler;
 }
 
@@ -216,8 +218,27 @@ static void consume(TokenType type, char* message) {
     errorAtCurrent(message);
 }
 
-static void emitByte(uint8_t byte) {
+static void emitOneByte(uint8_t byte) {
     writeChunk(currentChunk(), byte, parser.previous.line);
+}
+
+static void emitByte(uint8_t byte) {
+    if (byte == OP_POP) {
+        current->popCount++;
+        return;
+    }
+
+    if (current->popCount > 0) {
+        if (current->popCount == 1) {
+            emitOneByte(OP_POP);
+        } else {
+            emitOneByte(OP_POP_COUNT);
+            emitOneByte(current->popCount);
+        }
+        current->popCount = 0;
+    }
+
+    emitOneByte(byte);
 }
 
 static void emitBytes(uint8_t byte1, uint8_t byte2) {

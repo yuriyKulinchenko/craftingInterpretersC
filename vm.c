@@ -55,6 +55,11 @@ Value pop() {
     return *vm.stackTop;
 }
 
+Value popCount(uint8_t n) {
+    vm.stackTop -= n;
+    return *vm.stackTop;
+}
+
 Value peek(int n) {
     return vm.stackTop[-1 - n];
 }
@@ -201,6 +206,12 @@ InterpretResult run() {
                 pop();
                 break;
             }
+
+            case OP_POP_COUNT: {
+                popCount(READ_BYTE());
+                break;
+            }
+
 
             case OP_JUMP_IF_FALSE: {
                 uint16_t offset = READ_SHORT();
