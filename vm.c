@@ -249,6 +249,8 @@ InterpretResult interpret(const char* source) {
         return INTERPRET_COMPILE_ERROR;
     }
 
+    resetStack();
+
     vm.chunk = &chunk;
     vm.ip = vm.chunk->code;
 

@@ -474,6 +474,17 @@ int resolveLocal(Compiler* compiler, Token* token) {
     return -1;
 }
 
+int currentDepthLocals(Compiler* compiler) {
+    int count = 0;
+    for (int i = compiler->localCount - 1; i >= 0; i--) {
+        Local* local = &compiler->locals[i];
+        if (local->depth < compiler->scopeDepth) {
+            return count;
+        }
+        count++;
+    }
+}
+
 static void namedVariable(Token name, bool canAssign) {
     uint8_t getOp, setOp;
     int arg = resolveLocal(current, &name);
@@ -611,8 +622,61 @@ static void whileStatement() {
 
     patchJump(endJump);
     emitByte(OP_POP);
+}
 
+static void forStatement() {
+    beginScope();
 
+    consume(TOKEN_LEFT_PAREN, "Expect '(' after for");
+
+    // First, parse initializer statement:
+    // Uniquely, this can be a variable declaration OR expression statement
+
+    if (match(TOKEN_VAR)) {
+        varDeclaration();
+    } else if (!check(TOKEN_SEMICOLON)) {
+        expressionStatement();
+    } else {
+        consume(TOKEN_SEMICOLON, "Expect ';' after loop initializer.");
+    }
+
+    int loopStart = currentChunk()->count;
+
+    // Secondly, parse the condition expression:
+
+    int exitJump = -1; // There may be no exit
+    if (!match(TOKEN_SEMICOLON)) {
+        expression();
+        consume(TOKEN_SEMICOLON, "Expect ';' after initializer clause");
+        exitJump = emitJump(OP_JUMP_IF_FALSE);
+        emitByte(OP_POP);
+    }
+
+    int bodyJump = emitJump(OP_JUMP);
+
+    // Thirdly, parse the increment expression:
+
+    int increment = currentChunk()->count;
+    if (!check(TOKEN_RIGHT_PAREN)) {
+        expression();
+        emitByte(OP_POP);
+    }
+    emitLoop(loopStart);
+
+    consume(TOKEN_RIGHT_PAREN, "Expect ')' after for statements");
+
+    // Finally, parse the body:
+
+    patchJump(bodyJump);
+    statement();
+    emitLoop(increment);
+
+    // TEMPORARY: assume exitJump != -1
+    if (exitJump == -1) error("For now, require exit condition");
+    patchJump(exitJump);
+    emitByte(OP_POP);
+
+    endScope();
 }
 
 static void statement() {
@@ -624,7 +688,9 @@ static void statement() {
         ifStatement();
     } else if (match(TOKEN_WHILE)) {
         whileStatement();
-    } else {
+    } else if (match(TOKEN_FOR)) {
+        forStatement();
+    }else {
         expressionStatement();
     }
 }
