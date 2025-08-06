@@ -490,12 +490,19 @@ static void declaration() {
     if (parser.panicMode) synchronize();
 }
 
-static int emitJump(OpCode type) {
-
+static void patchJump(int offset) {
+    int jump = currentChunk()->count - offset - 2;
+    if (jump > UINT16_MAX) {
+        error("Too much code to jump over");
+    }
+    currentChunk()->code[offset] = jump >> 8 & 0xff;
+    currentChunk()->code[offset + 1] = jump & 0xff;
 }
 
-static void patchJump(int location) {
-
+static int emitJump(uint8_t instruction) {
+    emitByte(instruction);
+    emitBytes(0xff, 0xff);
+    return currentChunk()->count - 2;
 }
 
 static void ifStatement() {
