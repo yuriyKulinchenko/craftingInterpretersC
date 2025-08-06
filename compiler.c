@@ -72,6 +72,8 @@ static void block();
 static void patchJump(int offset);
 static int emitJump(uint8_t instruction);
 
+static void emitLoop(int loopStart);
+
 static ParseRule* getRule(TokenType type);
 static void parsePrecedence(Precedence precedence);
 
@@ -548,22 +550,48 @@ static int emitJump(uint8_t instruction) {
     return currentChunk()->count - 2;
 }
 
+static void emitLoop(int loopStart) {
+    emitByte(OP_LOOP);
+    int offset = currentChunk()->count - loopStart + 2;
+    if (offset > UINT16_MAX) error("Loop body too large.");
+    emitByte(offset >> 8 & 0xff);
+    emitByte(offset & 0xff);
+}
+
 static void ifStatement() {
     consume(TOKEN_LEFT_PAREN, "Expect '(' before if condition");
     expression();
     consume(TOKEN_RIGHT_PAREN, "Expect ')' after if condition");
 
-    int elseJump = emitJump(OP_JUMP_IF_FALSE); // jumps to else block
+    int elseJump = emitJump(OP_JUMP_IF_FALSE); // Jumps to else block
 
     emitByte(OP_POP);
-    statement(); // then statement
-    int thenJump = emitJump(OP_JUMP); // jumps to end, to not fall through to else statement
+    statement(); // Then statement
+    int thenJump = emitJump(OP_JUMP); // Jumps to end, to not fall through to else statement
 
     patchJump(elseJump);
     emitByte(OP_POP);
-    if (match(TOKEN_ELSE)) statement(); // else statement
+    if (match(TOKEN_ELSE)) statement(); // Else statement
 
     patchJump(thenJump);
+}
+
+static void whileStatement() {
+    int loopStart = currentChunk()->count;
+    consume(TOKEN_LEFT_PAREN, "Expect '(' before while condition");
+    expression();
+    consume(TOKEN_RIGHT_PAREN, "Expect ')' after while condition");
+
+    int endJump = emitJump(OP_JUMP_IF_FALSE); // Exit loop
+
+    emitByte(OP_POP);
+    statement();
+    emitLoop(loopStart);
+
+    patchJump(endJump);
+    emitByte(OP_POP);
+
+
 }
 
 static void statement() {
@@ -573,7 +601,9 @@ static void statement() {
         block();
     } else if (match(TOKEN_IF)) {
         ifStatement();
-    }else {
+    } else if (match(TOKEN_WHILE)) {
+        whileStatement();
+    } else {
         expressionStatement();
     }
 }

@@ -1,1 +1,3 @@
-print true ? "true" : "false";
+var i = false;
+i = true;
+print i;

@@ -214,6 +214,12 @@ InterpretResult run() {
                 break;
             }
 
+            case OP_LOOP: {
+                uint16_t offset = READ_SHORT();
+                vm.ip -= offset;
+                break;
+            }
+
         }
     }
 #undef READ_CONSTANT
