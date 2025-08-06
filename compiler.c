@@ -510,8 +510,15 @@ static void ifStatement() {
     expression();
     consume(TOKEN_RIGHT_PAREN, "Expect ')' after if condition");
 
-    int thenJump = emitJump(OP_JUMP_IF_FALSE);
-    statement();
+    int elseJump = emitJump(OP_JUMP_IF_FALSE); // jumps to else block
+
+    emitByte(OP_POP);
+    statement(); // then statement
+    int thenJump = emitJump(OP_JUMP); // jumps to end, to not fall through to else statement
+
+    patchJump(elseJump);
+    emitByte(OP_POP);
+    if (match(TOKEN_ELSE)) statement(); // else statement
 
     patchJump(thenJump);
 }
