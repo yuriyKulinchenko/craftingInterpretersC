@@ -22,6 +22,7 @@ typedef void (*ParseFn)(bool canAssign);
 typedef enum {
     PREC_NONE,
     PREC_ASSIGNMENT,
+    PREC_TERNARY,
     PREC_OR,
     PREC_AND,
     PREC_EQUALITY,
@@ -51,6 +52,7 @@ typedef struct {
 } Compiler;
 
 static void binary(bool canAssign);
+static void ternary(bool canAssign);
 static void and_(bool canAssign);
 static void or_(bool canAssign);
 
@@ -117,6 +119,8 @@ ParseRule rules[] = {
     [TOKEN_WHILE] = {NULL, NULL, PREC_NONE},
     [TOKEN_ERROR] = {NULL, NULL, PREC_NONE},
     [TOKEN_EOF] = {NULL, NULL, PREC_NONE},
+    [TOKEN_QUESTION_MARK] = {NULL, ternary, PREC_TERNARY},
+    [TOKEN_COLON] = {NULL, NULL, PREC_NONE},
 };
 
 Parser parser;
@@ -342,8 +346,25 @@ static void binary(bool canAssign) {
     }
 }
 
+static void ternary(bool canAssign) {
+    // Parsing condition ? a : b with 'condition' already on the stack
+    int bJump = emitJump(OP_JUMP_IF_FALSE);
+
+    emitByte(OP_POP);
+    parsePrecedence(PREC_TERNARY); // push a
+    int endJump = emitJump(OP_JUMP);
+
+    consume(TOKEN_COLON, "Expect ':' after first expression in ternary operator");
+
+    patchJump(bJump);
+    emitByte(OP_POP);
+    parsePrecedence(PREC_TERNARY); // push b
+
+    patchJump(endJump);
+}
+
 static void and_(bool canAssign) {
-    // parsing a and b, with 'a' already on the stack
+    // Parsing a and b, with 'a' already on the stack
     int endJump = emitJump(OP_JUMP_IF_FALSE);
     emitByte(OP_POP);
     parsePrecedence(PREC_AND);
