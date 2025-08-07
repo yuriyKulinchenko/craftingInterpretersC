@@ -1,8 +1,9 @@
-// expected: 0 1 2
-for (var a = 0; a < 3; a++) {
-  var saved = a;
-  for (var b = 0; b < 3; b++) {
-    if (b == 1) break;
-  }
-  print saved;
+var a = 0;
+var b = 1;
+
+for(var i = 0; i < 10; i++) {
+    print a;
+    var temp = b;
+    b = a + b;
+    a = temp;
 }

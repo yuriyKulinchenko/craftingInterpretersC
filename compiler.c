@@ -57,7 +57,8 @@ typedef enum {
     TYPE_SCRIPT
 } FunctionType;
 
-typedef struct {
+typedef struct Compiler {
+    struct Compiler* enclosing;
     ObjFunction* function;
     FunctionType type;
 
@@ -73,6 +74,7 @@ typedef struct {
 Compiler* current = NULL;
 
 void initCompiler(Compiler* compiler, FunctionType type) {
+    compiler->enclosing = current;
     compiler->type = type;
     compiler->function = NULL;
 
@@ -109,6 +111,9 @@ static void declaration();
 static void statement();
 
 static void block();
+
+static void beginScope();
+static void endScope();
 
 static void patchJump(int offset);
 static int emitJump(uint8_t instruction);
@@ -295,6 +300,8 @@ static ObjFunction* endCompiler() {
         disassembleChunk(currentChunk(), chars);
     }
 #endif
+    // Yield to enclosing compiler
+    current = current->enclosing;
     return function;
 }
 
@@ -491,9 +498,14 @@ static uint8_t parseVariable(const char* errorMessage) {
     return identifierConstant(&parser.previous);
 }
 
+static void markInitialized() {
+    if (current->scopeDepth == 0) return;
+    current->locals[current->localCount - 1].depth = current->scopeDepth;
+}
+
 static void defineVariable(uint8_t global) {
     if (current->scopeDepth > 0) {
-        current->locals[current->localCount - 1].depth = current->scopeDepth;
+        markInitialized();
         return; // Leave value on the stack
     }
 
@@ -569,6 +581,31 @@ static void varDeclaration() {
     defineVariable(global);
 }
 
+static void function(FunctionType type) {
+    Compiler compiler;
+    initCompiler(&compiler, type);
+    beginScope(); // Ensures variable declarations within functions are never global
+
+    // Compile parameters
+    consume(TOKEN_LEFT_PAREN, "Expect '(' before parameters");
+    consume(TOKEN_RIGHT_PAREN, "Expect ')' after parameters");
+
+    // Compile body
+    consume(TOKEN_LEFT_BRACE, "Expect '{' before function body");
+    block();
+
+    ObjFunction* function = endCompiler();
+    emitBytes(OP_CONSTANT, makeConstant(OBJ_VAL(function)));
+    // This is later bound to a variable
+}
+
+static void funDeclaration() {
+    uint8_t global = parseVariable("Expect function name");
+    markInitialized();
+    function(TYPE_FUNCTION);
+    defineVariable(global);
+}
+
 static void printStatement() {
     expression();
     emitByte(OP_PRINT);
@@ -608,6 +645,8 @@ static void block() {
 static void declaration() {
     if (match(TOKEN_VAR)) {
         varDeclaration();
+    } else if (match(TOKEN_FUN)) {
+        funDeclaration();
     } else {
         statement();
     }
