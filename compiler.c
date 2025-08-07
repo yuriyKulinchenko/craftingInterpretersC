@@ -41,11 +41,6 @@ typedef struct {
 } ParseRule;
 
 typedef struct {
-    Token name;
-    int depth;
-} Local;
-
-typedef struct {
     bool inLoop;
     int loopLocalCount; // Number of locals declared up to the outermost loop
     int loopContinue; // Address for conditional loop
@@ -53,6 +48,19 @@ typedef struct {
 } LoopState;
 
 typedef struct {
+    Token name;
+    int depth;
+} Local;
+
+typedef enum {
+    TYPE_FUNCTION,
+    TYPE_SCRIPT
+} FunctionType;
+
+typedef struct {
+    ObjFunction* function;
+    FunctionType type;
+
     Local locals[UINT8_COUNT];
     int localCount;
     int scopeDepth;
@@ -64,7 +72,10 @@ typedef struct {
 
 Compiler* current = NULL;
 
-void initCompiler(Compiler* compiler) {
+void initCompiler(Compiler* compiler, FunctionType type) {
+    compiler->type = type;
+    compiler->function = NULL;
+
     compiler->localCount = 0;
     compiler->scopeDepth = 0;
 
@@ -72,7 +83,13 @@ void initCompiler(Compiler* compiler) {
     compiler->popCount = 0;
     compiler->loopState = (LoopState)
     {.inLoop = false, .loopLocalCount = 0, .loopContinue = 0, .loopBreak = 0};
+    compiler->function = newFunction();
     current = compiler;
+
+    Local* local = &current->locals[current->localCount++];
+    local->depth = 0;
+    local->name.start = "";
+    local->name.length = 0;
 }
 
 static void binary(bool canAssign);
@@ -154,7 +171,7 @@ Parser parser;
 Chunk* compilingChunk;
 
 static Chunk* currentChunk() {
-    return compilingChunk;
+    return &current->function->chunk;
 }
 
 static void errorAt(Token* token, const char* message) {
@@ -271,13 +288,16 @@ static void emitReturn() {
     emitByte(OP_RETURN);
 }
 
-static void endCompiler() {
+static ObjFunction* endCompiler() {
     emitReturn();
+    ObjFunction* function = current->function;
 #ifdef DEBUG_PRINT_CODE
     if (!parser.hadError) {
-        disassembleChunk(currentChunk(), "code");
+        char* chars = function->name != NULL ? function->name->chars : "<script>";
+        disassembleChunk(currentChunk(), chars);
     }
 #endif
+    return function;
 }
 
 static uint8_t makeConstant(Value value) {
@@ -769,10 +789,10 @@ static void statement() {
     }
 }
 
-bool compile(const char* source, Chunk* chunk) {
+ObjFunction* compile(const char* source, Chunk* chunk) {
     initScanner(source);
     Compiler compiler;
-    initCompiler(&compiler);
+    initCompiler(&compiler, TYPE_SCRIPT);
     compilingChunk = chunk;
 
     parser.hadError = false;
@@ -785,6 +805,6 @@ bool compile(const char* source, Chunk* chunk) {
     }
 
 
-    endCompiler();
-    return !parser.hadError;
+    ObjFunction* function = endCompiler();
+    return parser.hadError ? NULL : function;
 }

@@ -28,18 +28,23 @@ void freeValueArray(ValueArray* array) {
 }
 
 char* objToString(Obj* object) {
-    char* chars;
+    char* returnChars;
     switch (object->type) {
         case OBJ_STRING: {
-            asprintf(&chars, "\"%s\"",((ObjString*) object)->chars);
+            ObjString* string = (ObjString*) object;
+            char* chars = string->chars;
+            asprintf(&returnChars, "\"%s\"", chars);
             break;
         }
         case OBJ_FUNCTION: {
-            asprintf(&chars, "<%s>", ((ObjFunction*) object)->name->chars);
+            ObjFunction* function = (ObjFunction*) object;
+            char* chars = function->name == NULL ? "script" : function->name->chars;
+            asprintf(&returnChars, "<%s>", chars);
+            break;
         }
-        default: asprintf(&chars, "unrecognized object"); break;
+        default: asprintf(&returnChars, "unrecognized object"); break;
     }
-    return chars;
+    return returnChars;
 }
 
 char* valueToString(Value value) {
