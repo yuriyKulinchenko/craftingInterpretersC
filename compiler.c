@@ -46,11 +46,34 @@ typedef struct {
 } Local;
 
 typedef struct {
+    bool inLoop;
+    int loopLocalCount; // Number of locals declared up to the outermost loop
+    int loopContinue; // Address for conditional loop
+    int loopBreak; // Address for unconditional loop
+} LoopState;
+
+typedef struct {
     Local locals[UINT8_COUNT];
     int localCount;
     int scopeDepth;
-    int popCount;
+
+     // Custom
+    int popCount; // Number of consecutive pop instructions
+    LoopState loopState;
 } Compiler;
+
+Compiler* current = NULL;
+
+void initCompiler(Compiler* compiler) {
+    compiler->localCount = 0;
+    compiler->scopeDepth = 0;
+
+    // Custom
+    compiler->popCount = 0;
+    compiler->loopState = (LoopState)
+    {.inLoop = false, .loopLocalCount = 0, .loopContinue = 0, .loopBreak = 0};
+    current = compiler;
+}
 
 static void binary(bool canAssign);
 static void ternary(bool canAssign);
@@ -127,16 +150,8 @@ ParseRule rules[] = {
 };
 
 Parser parser;
-Compiler* current = NULL;
 
 Chunk* compilingChunk;
-
-void initCompiler(Compiler* compiler) {
-    compiler->localCount = 0;
-    compiler->scopeDepth = 0;
-    compiler->popCount = 0;
-    current = compiler;
-}
 
 static Chunk* currentChunk() {
     return compilingChunk;
@@ -239,6 +254,10 @@ static void emitByte(uint8_t byte) {
     }
 
     emitOneByte(byte);
+}
+
+static void emitPops(int n) {
+    current->popCount += n;
 }
 
 static void emitBytes(uint8_t byte1, uint8_t byte2) {
@@ -617,7 +636,18 @@ static void ifStatement() {
 }
 
 static void whileStatement() {
+
+    LoopState oldLoopState = current->loopState;
+    current->loopState.loopLocalCount = current->localCount;
+    current->loopState.inLoop = true;
+
+    int startJump = emitJump(OP_JUMP);
+    current->loopState.loopBreak = currentChunk()->count;
+    int endJumpNoPop = emitJump(OP_JUMP);
+
+    patchJump(startJump);
     int loopStart = currentChunk()->count;
+    current->loopState.loopContinue = loopStart;
     consume(TOKEN_LEFT_PAREN, "Expect '(' before while condition");
     expression();
     consume(TOKEN_RIGHT_PAREN, "Expect ')' after while condition");
@@ -630,6 +660,9 @@ static void whileStatement() {
 
     patchJump(endJump);
     emitByte(OP_POP);
+    patchJump(endJumpNoPop);
+
+    current->loopState = oldLoopState;
 }
 
 static void forStatement() {
@@ -687,6 +720,24 @@ static void forStatement() {
     endScope();
 }
 
+static void continueStatement() {
+    if (!current->loopState.inLoop) {
+        error("'continue' statement can only be used inside of loop");
+    }
+    emitPops(current->localCount - current->loopState.loopLocalCount);
+    emitLoop(current->loopState.loopContinue);
+    consume(TOKEN_SEMICOLON, "Expect ';' after statement");
+}
+
+static void breakStatement() {
+    if (!current->loopState.inLoop) {
+        error("'break' statement can only be used inside of loop");
+    }
+    emitPops(current->localCount - current->loopState.loopLocalCount);
+    emitLoop(current->loopState.loopBreak);
+    consume(TOKEN_SEMICOLON, "Expect ';' after statement");
+}
+
 static void statement() {
     if (match(TOKEN_PRINT)) {
         printStatement();
@@ -698,7 +749,13 @@ static void statement() {
         whileStatement();
     } else if (match(TOKEN_FOR)) {
         forStatement();
-    }else {
+    } else if (match(TOKEN_CONTINUE)) {
+        continueStatement();
+    } else if (match(TOKEN_BREAK)) {
+        breakStatement();
+    }
+
+    else {
         expressionStatement();
     }
 }
