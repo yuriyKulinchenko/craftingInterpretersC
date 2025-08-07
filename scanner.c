@@ -137,7 +137,16 @@ static TokenType checkKeyword(int start, int length, const char* rest, TokenType
 static TokenType identifierType() {
     switch (scanner.start[0]) {
         case 'a': return checkKeyword(1, 2, "nd", TOKEN_AND);
-        case 'c': return checkKeyword(1, 4, "lass", TOKEN_CLASS);
+        case 'b': return checkKeyword(1, 4, "reak", TOKEN_BREAK);
+
+        case 'c': if (scanner.current - scanner.start > 1) {
+            switch (scanner.start[1]) {
+                case 'l': return checkKeyword(2, 3, "ass", TOKEN_CLASS);
+                case 'o': return checkKeyword(2, 6, "ntinue", TOKEN_CONTINUE);
+            }
+        }
+        break;
+
         case 'e': return checkKeyword(1, 3, "lse", TOKEN_ELSE);
 
         case 'f': if (scanner.current - scanner.start > 1) {
@@ -196,8 +205,6 @@ Token scanToken() {
         case ';': return makeToken(TOKEN_SEMICOLON);
         case ',': return makeToken(TOKEN_COMMA);
         case '.': return makeToken(TOKEN_DOT);
-        case '-': return makeToken(TOKEN_MINUS);
-        case '+': return makeToken(TOKEN_PLUS);
         case '/': return makeToken(TOKEN_SLASH);
         case '*': return makeToken(TOKEN_STAR);
         case '?': return makeToken(TOKEN_QUESTION_MARK);
@@ -210,6 +217,10 @@ Token scanToken() {
             return makeToken(match('=') ? TOKEN_LESS_EQUAL : TOKEN_LESS);
         case '>':
             return makeToken(match('=') ? TOKEN_GREATER_EQUAL : TOKEN_GREATER);
+        case '+':
+            return makeToken(match('+') ? TOKEN_PLUS_PLUS : TOKEN_PLUS);
+        case '-':
+            return makeToken(match('-') ? TOKEN_MINUS_MINUS : TOKEN_MINUS);
         case '"': return string();
 
     }

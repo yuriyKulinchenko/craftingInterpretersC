@@ -483,6 +483,7 @@ int currentDepthLocals(Compiler* compiler) {
         }
         count++;
     }
+    return count;
 }
 
 static void namedVariable(Token name, bool canAssign) {
