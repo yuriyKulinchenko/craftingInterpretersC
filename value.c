@@ -34,6 +34,9 @@ char* objToString(Obj* object) {
             asprintf(&chars, "\"%s\"",((ObjString*) object)->chars);
             break;
         }
+        case OBJ_FUNCTION: {
+            asprintf(&chars, "<%s>", ((ObjFunction*) object)->name->chars);
+        }
         default: asprintf(&chars, "unrecognized object"); break;
     }
     return chars;
@@ -79,6 +82,9 @@ ObjString* valueKey(Value value) {
                 case OBJ_STRING: {
                     prefix = "STRING"; break;
                 }
+                case OBJ_FUNCTION: {
+                    prefix = "FUNCTION"; break;
+                }
                 default: return NULL;
             }
             break;
@@ -101,9 +107,8 @@ bool objEqual(Obj* aPtr, Obj* bPtr) {
     if (aPtr->type != bPtr->type) return false;
 
     switch (aPtr->type) {
-        case OBJ_STRING: {
-            return aPtr == bPtr; // Reference equality now works because of interning
-        }
+        case OBJ_STRING: return aPtr == bPtr; // Reference equality now works because of interning
+        case OBJ_FUNCTION: return false; // May change later
         default: return false;
     }
 }

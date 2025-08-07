@@ -5,6 +5,7 @@
 #include "table.h"
 
 #include "value.h"
+#include "vm.h"
 
 #define ALLOCATE_OBJ(type, objectType) \
 (type*)allocateObject(sizeof(type), objectType)
@@ -64,4 +65,13 @@ ObjString* copyString(char* chars, int length) {
     memcpy(copiedChars, chars, length);
     copiedChars[length] = '\0';
     return allocateString(copiedChars, length, hash);
+}
+
+ObjFunction* newFunction() {
+    ObjFunction* function = ALLOCATE_OBJ(ObjFunction, OBJ_FUNCTION);
+
+    function->arity = 0;
+    function->name = NULL;
+    initChunk(&function->chunk);
+    return function;
 }
