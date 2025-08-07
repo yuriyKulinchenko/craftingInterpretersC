@@ -597,6 +597,7 @@ static void declaration() {
 }
 
 static void patchJump(int offset) {
+    flushPops();
     int jump = currentChunk()->count - offset - 2;
     if (jump > UINT16_MAX) {
         error("Too much code to jump over");
@@ -722,7 +723,6 @@ static void forStatement() {
 
     if (exitJump != -1) patchJump(exitJump);
     emitByte(OP_POP);
-    flushPops();
     patchJump(exitJumpNoPop);
 
     endScope();
