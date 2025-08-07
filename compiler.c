@@ -498,10 +498,17 @@ static void namedVariable(Token name, bool canAssign) {
         setOp = OP_SET_GLOBAL;
     }
 
-
     if (canAssign && match(TOKEN_EQUAL)) {
         expression();
         emitBytes(setOp, (uint8_t)arg);
+    } else if (canAssign && (match(TOKEN_PLUS_PLUS) || match(TOKEN_MINUS_MINUS))) {
+        uint8_t one = makeConstant(NUMBER_VAL(1));
+        emitBytes(getOp, (uint8_t)arg);
+        emitBytes(getOp, (uint8_t)arg);
+        emitBytes(OP_CONSTANT, one);
+        emitByte(parser.previous.type == TOKEN_PLUS_PLUS ? OP_ADD : OP_SUBTRACT);
+        emitBytes(setOp, (uint8_t)arg);
+        emitByte(OP_POP);
     } else {
         emitBytes(getOp, (uint8_t)arg);
     }
