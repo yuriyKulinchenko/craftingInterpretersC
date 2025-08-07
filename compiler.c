@@ -237,22 +237,24 @@ static void emitOneByte(uint8_t byte) {
     writeChunk(currentChunk(), byte, parser.previous.line);
 }
 
+static void flushPops() {
+    if (current->popCount == 0) return;
+    if (current->popCount == 1) {
+        emitOneByte(OP_POP);
+    } else {
+        emitOneByte(OP_POP_COUNT);
+        emitOneByte(current->popCount);
+    }
+    current->popCount = 0;
+}
+
 static void emitByte(uint8_t byte) {
     if (byte == OP_POP) {
         current->popCount++;
         return;
     }
 
-    if (current->popCount > 0) {
-        if (current->popCount == 1) {
-            emitOneByte(OP_POP);
-        } else {
-            emitOneByte(OP_POP_COUNT);
-            emitOneByte(current->popCount);
-        }
-        current->popCount = 0;
-    }
-
+    flushPops();
     emitOneByte(byte);
 }
 
@@ -636,7 +638,6 @@ static void ifStatement() {
 }
 
 static void whileStatement() {
-
     LoopState oldLoopState = current->loopState;
     current->loopState.loopLocalCount = current->localCount;
     current->loopState.inLoop = true;
@@ -667,6 +668,8 @@ static void whileStatement() {
 
 static void forStatement() {
     beginScope();
+    LoopState oldLoopState = current->loopState;
+    current->loopState.inLoop = true;
 
     consume(TOKEN_LEFT_PAREN, "Expect '(' after for");
 
@@ -693,14 +696,19 @@ static void forStatement() {
         emitByte(OP_POP);
     }
 
+    current->loopState.loopLocalCount = current->localCount;
+
     int bodyJump = emitJump(OP_JUMP);
+    current->loopState.loopBreak = currentChunk()->count;
+    int exitJumpNoPop = emitJump(OP_JUMP);
 
     // Thirdly, parse the increment expression:
 
     int increment = currentChunk()->count;
+    current->loopState.loopContinue = increment;
     if (!check(TOKEN_RIGHT_PAREN)) {
         expression();
-        emitByte(OP_POP);
+        emitByte(OP_POP); // SUBTLE BUG!
     }
     emitLoop(loopStart);
 
@@ -712,12 +720,13 @@ static void forStatement() {
     statement();
     emitLoop(increment);
 
-    // TEMPORARY: assume exitJump != -1
-    if (exitJump == -1) error("For now, require exit condition");
-    patchJump(exitJump);
+    if (exitJump != -1) patchJump(exitJump);
     emitByte(OP_POP);
+    flushPops();
+    patchJump(exitJumpNoPop);
 
     endScope();
+    current->loopState = oldLoopState;
 }
 
 static void continueStatement() {
