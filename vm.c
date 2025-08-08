@@ -233,6 +233,12 @@ InterpretResult run() {
                 break;
             }
 
+            case OP_CALL: {
+                uint8_t argumentCount = READ_BYTE();
+                printf("Called function with argument count: %d\n", argumentCount);
+                break;
+            }
+
         }
     }
 #undef READ_CONSTANT

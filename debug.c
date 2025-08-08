@@ -65,26 +65,6 @@ int disassembleInstruction(Chunk* chunk, int offset) {
             return simpleInstruction("OP_DIVIDE", offset);
         case OP_NEGATE:
             return simpleInstruction("OP_NEGATE", offset);
-        case OP_CONSTANT:
-            return constantInstruction("OP_CONSTANT", chunk, offset);
-        case OP_DEFINE_GLOBAL:
-            return constantInstruction("OP_DEFINE_GLOBAL", chunk, offset);
-        case OP_GET_GLOBAL:
-            return constantInstruction("OP_GET_GLOBAL", chunk, offset);
-        case OP_SET_GLOBAL:
-            return constantInstruction("OP_SET_GLOBAL", chunk, offset);
-        case OP_GET_LOCAL:
-            return byteInstruction("OP_GET_LOCAL", chunk, offset);
-        case OP_SET_LOCAL:
-            return byteInstruction("OP_SET_LOCAL", chunk, offset);
-        case OP_POP_COUNT:
-            return byteInstruction("OP_POP_COUNT", chunk, offset);
-        case OP_JUMP_IF_FALSE:
-            return jumpInstruction("OP_JUMP_IF_FALSE", 1, chunk, offset);
-        case OP_JUMP:
-            return jumpInstruction("OP_JUMP", 1, chunk, offset);
-        case OP_LOOP:
-            return jumpInstruction("OP_LOOP", -1, chunk, offset);
         case OP_TRUE:
             return simpleInstruction("OP_TRUE", offset);
         case OP_FALSE:
@@ -103,6 +83,28 @@ int disassembleInstruction(Chunk* chunk, int offset) {
             return simpleInstruction("OP_PRINT", offset);
         case OP_POP:
             return simpleInstruction("OP_POP", offset);
+        case OP_CONSTANT:
+            return constantInstruction("OP_CONSTANT", chunk, offset);
+        case OP_DEFINE_GLOBAL:
+            return constantInstruction("OP_DEFINE_GLOBAL", chunk, offset);
+        case OP_GET_GLOBAL:
+            return constantInstruction("OP_GET_GLOBAL", chunk, offset);
+        case OP_SET_GLOBAL:
+            return constantInstruction("OP_SET_GLOBAL", chunk, offset);
+        case OP_GET_LOCAL:
+            return byteInstruction("OP_GET_LOCAL", chunk, offset);
+        case OP_SET_LOCAL:
+            return byteInstruction("OP_SET_LOCAL", chunk, offset);
+        case OP_POP_COUNT:
+            return byteInstruction("OP_POP_COUNT", chunk, offset);
+        case OP_CALL:
+            return byteInstruction("OP_CALL", chunk, offset);
+        case OP_JUMP_IF_FALSE:
+            return jumpInstruction("OP_JUMP_IF_FALSE", 1, chunk, offset);
+        case OP_JUMP:
+            return jumpInstruction("OP_JUMP", 1, chunk, offset);
+        case OP_LOOP:
+            return jumpInstruction("OP_LOOP", -1, chunk, offset);
         default:
             printf("Unknown opcode %d\n", instruction);
             return offset + 1;

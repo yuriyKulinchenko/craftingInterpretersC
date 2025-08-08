@@ -1,5 +1,2 @@
-fun f(x, y) {
-    print x;
-}
-
-print f;
+var f;
+f(1,2);
