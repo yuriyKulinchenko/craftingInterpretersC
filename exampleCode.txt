@@ -1,2 +1,6 @@
-var f;
-f(1,2);
+fun log(x, y) {
+    print x;
+    print y;
+}
+
+log(1, 2);

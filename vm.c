@@ -81,8 +81,20 @@ void concatenate() {
     push(OBJ_VAL(result));
 }
 
+void addFrame(ObjFunction* function, uint8_t argumentCount) {
+    CallFrame* frame = &vm.frames[vm.frameCount++];
+    frame->function = function;
+    frame->ip = function->chunk.code;
+    frame->slots = vm.stackTop - argumentCount - 1;
+}
+
+void popFrame() {
+    // The stackTop must be reset
+    vm.stackTop = vm.frames[vm.frameCount - 1].slots;
+    vm.frameCount--;
+}
+
 InterpretResult run() {
-    CallFrame* frame = &vm.frames[vm.frameCount - 1];
 #define READ_BYTE() (*frame->ip++)
 #define READ_SHORT() (frame->ip += 2, (uint16_t)((frame->ip[-2] << 8) | frame->ip[-1]))
 #define READ_CONSTANT() (frame->function->chunk.constants.values[READ_BYTE()])
@@ -99,6 +111,7 @@ InterpretResult run() {
     } while (false) \
 
     for (;;) {
+        CallFrame* frame = &vm.frames[vm.frameCount - 1];
     #ifdef DEBUG_TRACE_EXECUTION
         printf("      ");
         for (Value* slot = vm.stack; slot < vm.stackTop; slot++) {
@@ -113,7 +126,10 @@ InterpretResult run() {
         uint8_t instruction;
         switch (instruction = READ_BYTE()) {
             case OP_RETURN: {
-                return INTERPRET_OK;
+                if (vm.frameCount == 1) return INTERPRET_OK;
+                Value value = pop();
+                popFrame();
+                push(value);
             }
             case OP_SUBTRACT: BINARY_OP(NUMBER_VAL, -); break;
             case OP_MULTIPLY: BINARY_OP(NUMBER_VAL, *); break;
@@ -235,7 +251,12 @@ InterpretResult run() {
 
             case OP_CALL: {
                 uint8_t argumentCount = READ_BYTE();
-                printf("Called function with argument count: %d\n", argumentCount);
+                Value callable = peek(argumentCount);
+                if (!IS_FUNCTION(callable)) {
+                    runtimeError("Can only call functions");
+                }
+                ObjFunction* function = AS_FUNCTION(callable);
+                addFrame(function, argumentCount);
                 break;
             }
 
