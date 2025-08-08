@@ -653,6 +653,16 @@ static void expressionStatement() {
     consume(TOKEN_SEMICOLON, "Expect ';' at end of statement");
 }
 
+static void returnStatement() {
+    if (match(TOKEN_SEMICOLON)) {
+        emitByte(OP_NIL);
+    } else {
+        expression();
+        consume(TOKEN_SEMICOLON, "Expect ';' at end of statement");
+    }
+    emitByte(OP_RETURN);
+}
+
 static void beginScope() {
     current->scopeDepth++;
 }
@@ -854,6 +864,8 @@ static void statement() {
         continueStatement();
     } else if (match(TOKEN_BREAK)) {
         breakStatement();
+    } else if (match(TOKEN_RETURN)) {
+        returnStatement();
     }
 
     else {

@@ -1,5 +1,5 @@
-fun identity() {
-    print 5;
+fun factorial(x) {
+    return x == 0 ? 1 : x * factorial(x - 1);
 }
 
-print identity();
+print factorial(5);
