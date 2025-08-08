@@ -34,7 +34,6 @@ typedef struct {
     Obj* objects;
     Table strings;
     Table globals;
-    Table constants;
 } VM;
 
 extern VM vm;

@@ -1,6 +1,6 @@
-fun log(x, y) {
+fun log(x) {
     print x;
-    print y;
+    log(x + 1);
 }
 
-log(1, 2);
+log(1);

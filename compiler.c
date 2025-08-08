@@ -68,6 +68,7 @@ typedef struct Compiler {
 
      // Custom
     int popCount; // Number of consecutive pop instructions
+    Table constants;
     LoopState loopState;
 } Compiler;
 
@@ -86,6 +87,8 @@ void initCompiler(Compiler* compiler, FunctionType type) {
     compiler->popCount = 0;
     compiler->loopState = (LoopState)
     {.inLoop = false, .loopLocalCount = 0, .loopContinue = 0, .loopBreak = 0};
+    initTable(&compiler->constants);
+
     compiler->function = newFunction();
     current = compiler;
 
@@ -293,10 +296,12 @@ static void emitBytes(uint8_t byte1, uint8_t byte2) {
 }
 
 static void emitReturn() {
+    emitByte(OP_NIL);
     emitByte(OP_RETURN);
 }
 
 static ObjFunction* endCompiler() {
+    freeTable(&current->constants);
     emitReturn();
     ObjFunction* function = current->function;
 #ifdef DEBUG_PRINT_CODE
@@ -313,7 +318,7 @@ static ObjFunction* endCompiler() {
 static uint8_t makeConstant(Value value) {
     Value returnValue;
     ObjString* key = valueKey(value);
-    if (tableGet(&vm.constants, key, &returnValue)) {
+    if (tableGet(&current->constants, key, &returnValue)) {
         return (uint8_t) AS_NUMBER(returnValue);
     }
 
@@ -324,7 +329,7 @@ static uint8_t makeConstant(Value value) {
         return 0;
     }
 
-    tableSet(&vm.constants, key, NUMBER_VAL(constant));
+    tableSet(&current->constants, key, NUMBER_VAL(constant));
     return (uint8_t)constant;
 }
 
@@ -631,7 +636,7 @@ static void function(FunctionType type) {
 
 static void funDeclaration() {
     uint8_t global = parseVariable("Expect function name");
-    markInitialized();
+    declareVariable();
     function(TYPE_FUNCTION);
     defineVariable(global);
 }
