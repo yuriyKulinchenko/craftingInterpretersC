@@ -1,6 +1,5 @@
-fun log(x) {
-    print x;
-    log(x + 1);
+fun identity() {
+    print 5;
 }
 
-log(1);
+print identity();
