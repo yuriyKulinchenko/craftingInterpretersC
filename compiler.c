@@ -71,6 +71,7 @@ typedef struct Compiler {
     LoopState loopState;
 } Compiler;
 
+Parser parser;
 Compiler* current = NULL;
 
 void initCompiler(Compiler* compiler, FunctionType type) {
@@ -87,6 +88,11 @@ void initCompiler(Compiler* compiler, FunctionType type) {
     {.inLoop = false, .loopLocalCount = 0, .loopContinue = 0, .loopBreak = 0};
     compiler->function = newFunction();
     current = compiler;
+
+    if (type != TYPE_SCRIPT) {
+        current->function->name = copyString(parser.previous.start,
+        parser.previous.length);
+    }
 
     Local* local = &current->locals[current->localCount++];
     local->depth = 0;
@@ -170,8 +176,6 @@ ParseRule rules[] = {
     [TOKEN_QUESTION_MARK] = {NULL, ternary, PREC_TERNARY},
     [TOKEN_COLON] = {NULL, NULL, PREC_NONE},
 };
-
-Parser parser;
 
 static Chunk* currentChunk() {
     return &current->function->chunk;
@@ -588,6 +592,19 @@ static void function(FunctionType type) {
 
     // Compile parameters
     consume(TOKEN_LEFT_PAREN, "Expect '(' before parameters");
+    if (!check(TOKEN_RIGHT_PAREN)) {
+        do {
+            current->function->arity++;
+            if (current->function->arity > 255) {
+                errorAtCurrent("Can't have more than 255 parameters.");
+            }
+            // All params are put onto the stack ?
+            uint8_t param = parseVariable("Expect parameter name");
+            defineVariable(param);
+
+        } while (match(TOKEN_COMMA));
+    }
+
     consume(TOKEN_RIGHT_PAREN, "Expect ')' after parameters");
 
     // Compile body
