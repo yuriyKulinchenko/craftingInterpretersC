@@ -54,6 +54,7 @@ typedef struct {
 
 typedef enum {
     TYPE_FUNCTION,
+    TYPE_ANONYMOUS,
     TYPE_SCRIPT
 } FunctionType;
 
@@ -93,8 +94,12 @@ void initCompiler(Compiler* compiler, FunctionType type) {
     current = compiler;
 
     if (type != TYPE_SCRIPT) {
-        current->function->name = copyString(parser.previous.start,
-        parser.previous.length);
+        if (type == TYPE_ANONYMOUS) {
+            current->function->name = copyString("lambda", 6);
+        } else {
+            current->function->name = copyString(parser.previous.start,
+            parser.previous.length);
+        }
     }
 
     Local* local = &current->locals[current->localCount++];
@@ -115,6 +120,7 @@ static void string(bool canAssign);
 static void literal(bool canAssign);
 static void grouping(bool canAssign);
 static void variable(bool canAssign);
+static void anonymousFunction(bool canAssign);
 
 static void expression();
 static void declaration();
@@ -179,6 +185,8 @@ ParseRule rules[] = {
     [TOKEN_EOF] = {NULL, NULL, PREC_NONE},
     [TOKEN_QUESTION_MARK] = {NULL, ternary, PREC_TERNARY},
     [TOKEN_COLON] = {NULL, NULL, PREC_NONE},
+    [TOKEN_FUN] = {anonymousFunction, NULL, PREC_NONE},
+    [TOKEN_ARROW] = {NULL, NULL, PREC_NONE},
 };
 
 static Chunk* currentChunk() {
@@ -632,6 +640,10 @@ static void function(FunctionType type) {
     ObjFunction* function = endCompiler();
     emitBytes(OP_CONSTANT, makeConstant(OBJ_VAL(function)));
     // This is later bound to a variable
+}
+
+static void anonymousFunction(bool canAssign) {
+    function(TYPE_ANONYMOUS);
 }
 
 static void funDeclaration() {

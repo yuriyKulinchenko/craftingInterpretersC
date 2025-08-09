@@ -221,7 +221,9 @@ Token scanToken() {
         case '+':
             return makeToken(match('+') ? TOKEN_PLUS_PLUS : TOKEN_PLUS);
         case '-':
-            return makeToken(match('-') ? TOKEN_MINUS_MINUS : TOKEN_MINUS);
+            if (match('-')) return makeToken(TOKEN_MINUS_MINUS);
+            if (match('>')) return makeToken(TOKEN_ARROW);
+            return makeToken(TOKEN_MINUS);
         case '"': return string();
 
     }
