@@ -617,25 +617,38 @@ static void function(FunctionType type) {
     beginScope(); // Ensures variable declarations within functions are never global
 
     // Compile parameters
-    consume(TOKEN_LEFT_PAREN, "Expect '(' before parameters");
-    if (!check(TOKEN_RIGHT_PAREN)) {
-        do {
-            current->function->arity++;
-            if (current->function->arity > 255) {
-                errorAtCurrent("Can't have more than 255 parameters.");
-            }
-            // All params are put onto the stack ?
-            uint8_t param = parseVariable("Expect parameter name");
-            defineVariable(param);
+    if (type == TYPE_ANONYMOUS && check(TOKEN_IDENTIFIER)) {
+        current->function->arity = 0;
+        uint8_t param = parseVariable("Expect parameter name");
+        defineVariable(param);
+    } else {
+        consume(TOKEN_LEFT_PAREN, "Expect '(' before parameters");
 
-        } while (match(TOKEN_COMMA));
+        if (!check(TOKEN_RIGHT_PAREN)) {
+            do {
+                current->function->arity++;
+                if (current->function->arity > 255) {
+                    errorAtCurrent("Can't have more than 255 parameters.");
+                }
+                // All params are put onto the stack ?
+                uint8_t param = parseVariable("Expect parameter name");
+                defineVariable(param);
+
+            } while (match(TOKEN_COMMA));
+        }
+
+        consume(TOKEN_RIGHT_PAREN, "Expect ')' after parameters");
     }
 
-    consume(TOKEN_RIGHT_PAREN, "Expect ')' after parameters");
 
     // Compile body
-    consume(TOKEN_LEFT_BRACE, "Expect '{' before function body");
-    block();
+    if (type == TYPE_ANONYMOUS && match(TOKEN_ARROW)) {
+        expression();
+        emitByte(OP_RETURN);
+    } else {
+        consume(TOKEN_LEFT_BRACE, "Expect '{' before function body");
+        block();
+    }
 
     ObjFunction* function = endCompiler();
     emitBytes(OP_CONSTANT, makeConstant(OBJ_VAL(function)));
