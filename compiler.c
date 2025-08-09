@@ -689,7 +689,7 @@ static void block() {
 static void declaration() {
     if (match(TOKEN_VAR)) {
         varDeclaration();
-    } else if (match(TOKEN_FUN)) {
+    } else if (match(TOKEN_DEF)) {
         funDeclaration();
     } else {
         statement();
