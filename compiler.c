@@ -636,7 +636,6 @@ static void function(FunctionType type) {
 
 static void funDeclaration() {
     uint8_t global = parseVariable("Expect function name");
-    declareVariable();
     function(TYPE_FUNCTION);
     defineVariable(global);
 }
