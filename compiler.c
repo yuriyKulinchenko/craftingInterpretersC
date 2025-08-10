@@ -395,7 +395,7 @@ static void array(bool canAssign) {
         } while (match(TOKEN_COMMA));
     }
     consume(TOKEN_RIGHT_SQUARE, "Expect ']' at end of array");
-    emitBytes(OP_ARRAY_CREATE, (uint8_t) arraySize);
+    emitBytes(OP_CREATE_ARRAY, (uint8_t) arraySize);
 }
 
 static void parsePrecedence(Precedence precedence) {

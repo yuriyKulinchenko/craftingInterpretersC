@@ -259,7 +259,7 @@ InterpretResult run() {
                 break;
             }
 
-            case OP_ARRAY_CREATE: {
+            case OP_CREATE_ARRAY: {
                 uint8_t count = READ_BYTE();
                 vm.stackTop -= count;
                 ObjArray* array = newArray(vm.stackTop, count);

@@ -35,8 +35,9 @@ typedef enum {
     OP_JUMP,
     OP_LOOP,
     OP_CALL,
-    OP_ARRAY_CREATE,
-    OP_ARRAY_ACCESS
+    OP_CREATE_ARRAY,
+    OP_GET_ARRAY,
+    OP_SET_ARRAY
 } OpCode;
 
 typedef struct {
