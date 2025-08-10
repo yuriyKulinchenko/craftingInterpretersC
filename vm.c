@@ -152,6 +152,7 @@ InterpretResult run() {
             case OP_NEGATE: {
                 if (!IS_NUMBER(peek(0))) {
                     runtimeError("Operand must be number");
+                    return INTERPRET_RUNTIME_ERROR;
                 }
                 push(NUMBER_VAL(-AS_NUMBER(pop())));
                 break;
@@ -253,6 +254,7 @@ InterpretResult run() {
                 Value callable = peek(argumentCount);
                 if (!IS_FUNCTION(callable)) {
                     runtimeError("Can only call functions");
+                    return INTERPRET_RUNTIME_ERROR;
                 }
                 ObjFunction* function = AS_FUNCTION(callable);
                 addFrame(function, argumentCount);
@@ -264,6 +266,27 @@ InterpretResult run() {
                 vm.stackTop -= count;
                 ObjArray* array = newArray(vm.stackTop, count);
                 push(OBJ_VAL(array));
+                break;
+            }
+
+            case OP_GET_ARRAY: {
+                Value indexValue = pop();
+                if (!IS_NUMBER(indexValue)) {
+                    runtimeError("Index must be a number");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                Value arrayValue = pop();
+                if (!IS_ARRAY(arrayValue)) {
+                    runtimeError("Can only index into arrays");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                int index = AS_NUMBER(indexValue);
+                ObjArray* array = AS_ARRAY(arrayValue);
+                if (index >= array->valueArray.count) {
+                    runtimeError("Provided index is out of bounds");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                push(array->valueArray.values[index]);
                 break;
             }
 

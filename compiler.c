@@ -493,7 +493,10 @@ static void call(bool canAssign) {
 }
 
 static void arrayAccess(bool canAssign) {
-
+    // Also handles setting of array elements
+    expression();
+    consume(TOKEN_RIGHT_SQUARE, "Expect ']' after array access");
+    emitByte(OP_GET_ARRAY);
 }
 
 static uint8_t identifierConstant(Token* name) {
@@ -502,7 +505,7 @@ static uint8_t identifierConstant(Token* name) {
 
 static void addLocal(Token name) {
     if (current->localCount == UINT8_COUNT) {
-        error("Too many local variables in function.");
+        error("Too many local variables in function");
         return;
     }
 

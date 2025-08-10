@@ -18,6 +18,7 @@
 #define AS_STRING(value) ((ObjString*)AS_OBJ(value))
 #define AS_CSTRING(value) (((ObjString*)AS_OBJ(value))->chars)
 #define AS_FUNCTION(value) ((ObjFunction*)AS_OBJ(value))
+#define AS_ARRAY(value) ((ObjArray*)AS_OBJ(value))
 
 
 typedef enum {

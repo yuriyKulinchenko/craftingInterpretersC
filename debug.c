@@ -83,6 +83,8 @@ int disassembleInstruction(Chunk* chunk, int offset) {
             return simpleInstruction("OP_PRINT", offset);
         case OP_POP:
             return simpleInstruction("OP_POP", offset);
+        case OP_GET_ARRAY:
+            return simpleInstruction("OP_GET_ARRAY", offset);
         case OP_CONSTANT:
             return constantInstruction("OP_CONSTANT", chunk, offset);
         case OP_DEFINE_GLOBAL:
