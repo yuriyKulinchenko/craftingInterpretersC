@@ -47,6 +47,7 @@ typedef struct {
 } ValueArray;
 
 void initValueArray(ValueArray* array);
+void initValueArrayCopy(ValueArray* array, Value* values, uint8_t count);
 void writeValueArray(ValueArray* array, Value value);
 void freeValueArray(ValueArray* array);
 

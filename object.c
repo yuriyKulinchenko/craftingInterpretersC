@@ -69,9 +69,15 @@ ObjString* copyString(char* chars, int length) {
 
 ObjFunction* newFunction() {
     ObjFunction* function = ALLOCATE_OBJ(ObjFunction, OBJ_FUNCTION);
-
     function->arity = 0;
     function->name = NULL;
     initChunk(&function->chunk);
     return function;
+}
+
+ObjArray* newArray(Value* values, uint8_t count) {
+    ObjArray* array = ALLOCATE_OBJ(ObjArray, OBJ_FUNCTION);
+    initValueArrayCopy(&array->valueArray, values, count);
+    array->size = count;
+    return array;
 }

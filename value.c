@@ -5,10 +5,37 @@
 #include <string.h>
 #include "object.h"
 
+static uint8_t nextPower(uint8_t n) {
+    if (n < 8) return 8;
+    if ((n & n - 1) == 0) return n; // Check if n is a power of 2
+    uint8_t shift = 1;
+    uint8_t old;
+    do {
+        old = n;
+        n |= n >> shift;
+        shift <<= 1;
+    } while (n != old);
+    return n + 1;
+}
+
 void initValueArray(ValueArray* array) {
     array->count = 0;
     array->capacity = 0;
     array->values = NULL;
+}
+
+void initValueArrayCopy(ValueArray* array, Value* values, uint8_t count) {
+    // values pointer is passed from VM stack
+    if (count == 0) {
+        initValueArray(array);
+        return;
+    }
+    array->count = count;
+    array->capacity = nextPower(count);
+    array->values = ALLOCATE(Value, array->capacity);
+    for (int i = 0; i < count; i++) {
+        array->values[i] = values[i];
+    }
 }
 
 

@@ -22,4 +22,5 @@ add_executable(craftingInterpretersC main.c
         object.h
         object.c
         table.h
-        table.c)
+        table.c
+)

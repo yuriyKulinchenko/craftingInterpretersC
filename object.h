@@ -21,7 +21,8 @@
 
 typedef enum {
     OBJ_STRING,
-    OBJ_FUNCTION
+    OBJ_FUNCTION,
+    OBJ_ARRAY,
 } ObjType;
 
 
@@ -37,6 +38,12 @@ typedef struct {
     ObjString* name;
 } ObjFunction;
 
+typedef struct {
+    Obj obj;
+    int size;
+    ValueArray valueArray;
+} ObjArray;
+
 struct ObjString { // Can be safely cast to Obj
     Obj obj;
     int length;
@@ -45,6 +52,8 @@ struct ObjString { // Can be safely cast to Obj
 };
 
 ObjFunction* newFunction();
+
+ObjArray* newArray(Value* values, uint8_t count);
 
 ObjString* takeString(char* chars, int length);
 ObjString* copyString(char* chars, int length);
