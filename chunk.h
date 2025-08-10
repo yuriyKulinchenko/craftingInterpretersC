@@ -37,7 +37,8 @@ typedef enum {
     OP_CALL,
     OP_CREATE_ARRAY,
     OP_GET_ARRAY,
-    OP_SET_ARRAY
+    OP_SET_ARRAY,
+    OP_DUPLICATE
 } OpCode;
 
 typedef struct {

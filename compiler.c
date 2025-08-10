@@ -307,8 +307,7 @@ static void emitBytes(uint8_t byte1, uint8_t byte2) {
 }
 
 static void emitReturn() {
-    emitByte(OP_NIL);
-    emitByte(OP_RETURN);
+    emitBytes(OP_NIL, OP_RETURN);
 }
 
 static ObjFunction* endCompiler() {
@@ -342,6 +341,10 @@ static uint8_t makeConstant(Value value) {
 
     tableSet(&current->constants, key, NUMBER_VAL(constant));
     return (uint8_t)constant;
+}
+
+static void emitNumber(int n) {
+    emitBytes(OP_CONSTANT, makeConstant(NUMBER_VAL(n)));
 }
 
 static void emitConstant(Value value) {
@@ -496,7 +499,21 @@ static void arrayAccess(bool canAssign) {
     // Also handles setting of array elements
     expression();
     consume(TOKEN_RIGHT_SQUARE, "Expect ']' after array access");
-    emitByte(OP_GET_ARRAY);
+    if (canAssign && match(TOKEN_EQUAL)) {
+        expression();
+        emitByte(OP_SET_ARRAY);
+    } else if (canAssign && (match(TOKEN_PLUS_PLUS) || match(TOKEN_MINUS_MINUS))) {
+        // Duplicate array and index, then access given element
+        emitBytes(OP_DUPLICATE, 1);
+        emitBytes(OP_DUPLICATE, 1);
+        emitByte(OP_GET_ARRAY);
+        // Add / subtract one, then set array
+        emitNumber(1);
+        emitByte(OP_ADD);
+        emitByte(OP_SET_ARRAY);
+    } else {
+        emitByte(OP_GET_ARRAY);
+    }
 }
 
 static uint8_t identifierConstant(Token* name) {
@@ -603,10 +620,9 @@ static void namedVariable(Token name, bool canAssign) {
         expression();
         emitBytes(setOp, (uint8_t)arg);
     } else if (canAssign && (match(TOKEN_PLUS_PLUS) || match(TOKEN_MINUS_MINUS))) {
-        uint8_t one = makeConstant(NUMBER_VAL(1));
         emitBytes(getOp, (uint8_t)arg);
-        emitBytes(getOp, (uint8_t)arg);
-        emitBytes(OP_CONSTANT, one);
+        emitBytes(OP_DUPLICATE, 0);
+        emitNumber(1);
         emitByte(parser.previous.type == TOKEN_PLUS_PLUS ? OP_ADD : OP_SUBTRACT);
         emitBytes(setOp, (uint8_t)arg);
         emitByte(OP_POP);

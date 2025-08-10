@@ -290,6 +290,31 @@ InterpretResult run() {
                 break;
             }
 
+            case OP_SET_ARRAY: {
+                Value newValue = pop();
+                Value indexValue = pop();
+                if (!IS_NUMBER(indexValue)) {
+                    runtimeError("Index must be a number");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                Value arrayValue = pop();
+                if (!IS_ARRAY(arrayValue)) {
+                    runtimeError("Can only index into arrays");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                int index = AS_NUMBER(indexValue);
+                ObjArray* array = AS_ARRAY(arrayValue);
+                array->valueArray.values[index] = newValue;
+                push(newValue);
+                break;
+            }
+
+            case OP_DUPLICATE: {
+                uint8_t offset = READ_BYTE();
+                push(peek(offset));
+                break;
+            }
+
         }
     }
 #undef READ_CONSTANT

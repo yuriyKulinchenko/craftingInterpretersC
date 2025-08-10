@@ -85,6 +85,8 @@ int disassembleInstruction(Chunk* chunk, int offset) {
             return simpleInstruction("OP_POP", offset);
         case OP_GET_ARRAY:
             return simpleInstruction("OP_GET_ARRAY", offset);
+        case OP_SET_ARRAY:
+            return simpleInstruction("OP_SET_ARRAY", offset);
         case OP_CONSTANT:
             return constantInstruction("OP_CONSTANT", chunk, offset);
         case OP_DEFINE_GLOBAL:
@@ -103,6 +105,8 @@ int disassembleInstruction(Chunk* chunk, int offset) {
             return byteInstruction("OP_CALL", chunk, offset);
         case OP_CREATE_ARRAY:
             return byteInstruction("OP_ARRAY_CREATE", chunk, offset);
+        case OP_DUPLICATE:
+            return byteInstruction("OP_DUPLICATE", chunk, offset);
         case OP_JUMP_IF_FALSE:
             return jumpInstruction("OP_JUMP_IF_FALSE", 1, chunk, offset);
         case OP_JUMP:
