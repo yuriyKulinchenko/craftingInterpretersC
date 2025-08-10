@@ -187,6 +187,7 @@ ParseRule rules[] = {
     [TOKEN_COLON] = {NULL, NULL, PREC_NONE},
     [TOKEN_FUN] = {anonymousFunction, NULL, PREC_NONE},
     [TOKEN_ARROW] = {NULL, NULL, PREC_NONE},
+    [TOKEN_LEFT_SQUARE] = {array, arrayAccess, PREC_CALL},
 };
 
 static Chunk* currentChunk() {

@@ -1,2 +1,5 @@
-print (fun x -> x + 1) (5);
-def g(x) {}
+def factorial(n) {
+    return n == 0 ? 1 : n * factorial(n - 1);
+}
+
+print factorial(5);

@@ -210,6 +210,8 @@ Token scanToken() {
         case '*': return makeToken(TOKEN_STAR);
         case '?': return makeToken(TOKEN_QUESTION_MARK);
         case ':': return makeToken(TOKEN_COLON);
+        case '[': return makeToken(TOKEN_LEFT_SQUARE);
+        case ']': return makeToken(TOKEN_RIGHT_SQUARE);
         case '=':
             return makeToken(match('=') ? TOKEN_EQUAL_EQUAL : TOKEN_EQUAL);
         case '!':
