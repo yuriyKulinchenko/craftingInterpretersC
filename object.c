@@ -78,6 +78,5 @@ ObjFunction* newFunction() {
 ObjArray* newArray(Value* values, uint8_t count) {
     ObjArray* array = ALLOCATE_OBJ(ObjArray, OBJ_ARRAY);
     initValueArrayCopy(&array->valueArray, values, count);
-    array->size = count;
     return array;
 }

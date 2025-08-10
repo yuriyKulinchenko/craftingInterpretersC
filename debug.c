@@ -87,6 +87,8 @@ int disassembleInstruction(Chunk* chunk, int offset) {
             return simpleInstruction("OP_GET_ARRAY", offset);
         case OP_SET_ARRAY:
             return simpleInstruction("OP_SET_ARRAY", offset);
+        case OP_APPEND:
+            return simpleInstruction("OP_APPEND", offset);
         case OP_CONSTANT:
             return constantInstruction("OP_CONSTANT", chunk, offset);
         case OP_DEFINE_GLOBAL:

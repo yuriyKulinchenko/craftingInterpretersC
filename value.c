@@ -58,7 +58,7 @@ char* valueToString(Value value);
 char* arrayToString(ObjArray* array) {
     char* chars = strdup("[");
     bool isFirst = true;
-    for (int i = 0; i < array->size; i++) {
+    for (int i = 0; i < array->valueArray.count; i++) {
         if (!isFirst) {
             char* temp = chars;
             asprintf(&chars, "%s, ", temp);

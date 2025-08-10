@@ -315,6 +315,18 @@ InterpretResult run() {
                 break;
             }
 
+            case OP_APPEND: {
+                Value value = pop();
+                Value arrayValue = peek(0);
+                if (!IS_ARRAY(arrayValue)) {
+                    runtimeError("Can only append to arrays");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                ObjArray* array = AS_ARRAY(arrayValue);
+                writeValueArray(&array->valueArray, value);
+                break;
+            }
+
         }
     }
 #undef READ_CONSTANT

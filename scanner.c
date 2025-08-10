@@ -217,7 +217,9 @@ Token scanToken() {
         case '!':
             return makeToken(match('=') ? TOKEN_BANG_EQUAL : TOKEN_BANG);
         case '<':
-            return makeToken(match('=') ? TOKEN_LESS_EQUAL : TOKEN_LESS);
+            if (match('=')) return makeToken(TOKEN_LESS_EQUAL);
+            if (match('<')) return makeToken(TOKEN_LESS_LESS);
+            return makeToken(TOKEN_LESS);
         case '>':
             return makeToken(match('=') ? TOKEN_GREATER_EQUAL : TOKEN_GREATER);
         case '+':

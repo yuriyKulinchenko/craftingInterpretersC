@@ -41,6 +41,7 @@ typedef enum {
 
     // Array syntax.
     TOKEN_LEFT_SQUARE, TOKEN_RIGHT_SQUARE,
+    TOKEN_LESS_LESS,
     
     TOKEN_ERROR,
     TOKEN_EOF

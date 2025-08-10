@@ -42,7 +42,6 @@ typedef struct {
 
 typedef struct {
     Obj obj;
-    int size;
     ValueArray valueArray;
 } ObjArray;
 

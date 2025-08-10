@@ -1,3 +1,1 @@
-var array = [0, 1, 2, 3];
-array[0]++;
-print array[0];
+print [] << 0 << 1 << 2 << 3;

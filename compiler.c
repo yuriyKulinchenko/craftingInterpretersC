@@ -27,6 +27,7 @@ typedef enum {
     PREC_AND,
     PREC_EQUALITY,
     PREC_COMPARISON,
+    PREC_APPEND,
     PREC_TERM,
     PREC_FACTOR,
     PREC_UNARY,
@@ -190,6 +191,7 @@ ParseRule rules[] = {
     [TOKEN_FUN] = {anonymousFunction, NULL, PREC_NONE},
     [TOKEN_ARROW] = {NULL, NULL, PREC_NONE},
     [TOKEN_LEFT_SQUARE] = {array, arrayAccess, PREC_CALL},
+    [TOKEN_LESS_LESS] = {NULL, binary, PREC_APPEND},
 };
 
 static Chunk* currentChunk() {
@@ -441,6 +443,7 @@ static void binary(bool canAssign) {
         case TOKEN_EQUAL_EQUAL: emitByte(OP_EQUAL); break;
         case TOKEN_LESS: emitByte(OP_LESS); break;
         case TOKEN_GREATER: emitByte(OP_GREATER); break;
+        case TOKEN_LESS_LESS: emitByte(OP_APPEND); break;
         case TOKEN_BANG_EQUAL: emitBytes(OP_EQUAL, OP_NOT); break;
         case TOKEN_LESS_EQUAL: emitBytes(OP_GREATER, OP_NOT); break;
         case TOKEN_GREATER_EQUAL: emitBytes(OP_LESS, OP_NOT); break;
