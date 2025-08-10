@@ -259,6 +259,12 @@ InterpretResult run() {
                 break;
             }
 
+            case OP_ARRAY_CREATE: {
+                uint8_t arraySize = READ_BYTE();
+                printf("Created array of size: %d\n", arraySize);
+                break;
+            }
+
         }
     }
 #undef READ_CONSTANT

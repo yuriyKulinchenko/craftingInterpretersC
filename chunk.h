@@ -35,6 +35,7 @@ typedef enum {
     OP_JUMP,
     OP_LOOP,
     OP_CALL,
+    OP_ARRAY_CREATE,
     OP_ARRAY_ACCESS
 } OpCode;
 

@@ -113,6 +113,7 @@ static void ternary(bool canAssign);
 static void and_(bool canAssign);
 static void or_(bool canAssign);
 static void call(bool canAssign);
+static void arrayAccess(bool canAssign);
 
 static void unary(bool canAssign);
 static void number(bool canAssign);
@@ -121,6 +122,7 @@ static void literal(bool canAssign);
 static void grouping(bool canAssign);
 static void variable(bool canAssign);
 static void anonymousFunction(bool canAssign);
+static void array(bool canAssign);
 
 static void expression();
 static void declaration();
@@ -359,8 +361,6 @@ static void string(bool canAssign) {
     emitConstant(OBJ_VAL(copyString(parser.previous.start + 1, parser.previous.length - 2)));
 }
 
-
-
 static void literal(bool canAssign) {
     switch (parser.previous.type) {
         case TOKEN_TRUE: emitByte(OP_TRUE); break;
@@ -384,6 +384,18 @@ static void unary(bool canAssign) {
         case TOKEN_BANG: emitByte(OP_NOT); break;
         default: return;
     }
+}
+
+static void array(bool canAssign) {
+    int arraySize = 0;
+    if (!check(TOKEN_RIGHT_SQUARE)) {
+        do {
+            arraySize++;
+            expression();
+        } while (match(TOKEN_COMMA));
+    }
+    consume(TOKEN_RIGHT_SQUARE, "Expect ']' at end of array");
+    emitBytes(OP_ARRAY_CREATE, (uint8_t) arraySize);
 }
 
 static void parsePrecedence(Precedence precedence) {
@@ -478,6 +490,10 @@ static void call(bool canAssign) {
     }
     consume(TOKEN_RIGHT_PAREN, "Expect ')' after call");
     emitBytes(OP_CALL, (uint8_t) argumentCount);
+}
+
+static void arrayAccess(bool canAssign) {
+
 }
 
 static uint8_t identifierConstant(Token* name) {
