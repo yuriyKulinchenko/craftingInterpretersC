@@ -260,8 +260,10 @@ InterpretResult run() {
             }
 
             case OP_ARRAY_CREATE: {
-                uint8_t arraySize = READ_BYTE();
-                printf("Created array of size: %d\n", arraySize);
+                uint8_t count = READ_BYTE();
+                vm.stackTop -= count;
+                ObjArray* array = newArray(vm.stackTop, count);
+                push(OBJ_VAL(array));
                 break;
             }
 

@@ -53,6 +53,32 @@ void freeValueArray(ValueArray* array) {
     reallocate(array->values, array->capacity, 0);
 }
 
+char* valueToString(Value value);
+
+char* arrayToString(ObjArray* array) {
+    char* chars = strdup("[");
+    bool isFirst = true;
+    for (int i = 0; i < array->size; i++) {
+        if (!isFirst) {
+            char* temp = chars;
+            asprintf(&chars, "%s, ", temp);
+            free(temp);
+        } else {
+            isFirst = false;
+        }
+        char* temp = chars;
+        char* valueString = valueToString(array->valueArray.values[i]);
+        asprintf(&chars, "%s%s", temp, valueString);
+        free(temp);
+        free(valueString);
+    }
+
+    char* temp = chars;
+    asprintf(&chars, "%s]", temp);
+    free(temp);
+    return chars;
+}
+
 char* objToString(Obj* object) {
     char* returnChars;
     switch (object->type) {
@@ -67,6 +93,10 @@ char* objToString(Obj* object) {
             char* chars = function->name == NULL ? "script" : function->name->chars;
             asprintf(&returnChars, "<%s>", chars);
             break;
+        }
+        case OBJ_ARRAY: {
+            ObjArray* array = (ObjArray*) object;
+            return arrayToString(array);
         }
         default: asprintf(&returnChars, "unrecognized object"); break;
     }
@@ -115,6 +145,9 @@ ObjString* valueKey(Value value) {
                 }
                 case OBJ_FUNCTION: {
                     prefix = "FUNCTION"; break;
+                }
+                case OBJ_ARRAY: {
+                    prefix = "ARRAY"; break;
                 }
                 default: return NULL;
             }
