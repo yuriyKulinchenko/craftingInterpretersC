@@ -380,6 +380,12 @@ InterpretResult run() {
                 break;
             }
 
+            case OP_CLOSE_UPVALUE: {
+                pop();
+                printf("Closed upvalue\n");
+                break;
+            }
+
         }
     }
 #undef READ_CONSTANT

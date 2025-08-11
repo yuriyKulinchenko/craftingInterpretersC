@@ -51,6 +51,7 @@ typedef struct {
 typedef struct {
     Token name;
     int depth;
+    bool isCaptured;
 } Local;
 
 typedef enum {
@@ -111,6 +112,7 @@ void initCompiler(Compiler* compiler, FunctionType type) {
 
     Local* local = &current->locals[current->localCount++];
     local->depth = 0;
+    local->isCaptured = false;
     local->name.start = "";
     local->name.length = 0;
 }
@@ -538,6 +540,7 @@ static void addLocal(Token name) {
     Local* local = &current->locals[current->localCount++];
     local->name = name;
     local->depth = -1;
+    local->isCaptured = false;
 }
 
 static bool identifiersEqual(Token* a, Token* b) {
@@ -622,6 +625,7 @@ int resolveUpvalue(Compiler* compiler, Token* token) {
     int index = resolveLocal(compiler->enclosing, token);
     // Check if upvalue is one scope out
     if (index != -1) {
+        compiler->enclosing->locals[index].isCaptured = true;
         return addUpvalue(compiler, (uint8_t)index, true);
     }
 
@@ -780,7 +784,11 @@ static void endScope() {
     while (current->localCount > 0) {
         Local* local = &current->locals[current->localCount - 1];
         if (local->depth < current->scopeDepth) break;
-        emitByte(OP_POP);
+        if (local->isCaptured) {
+            emitByte(OP_CLOSE_UPVALUE);
+        } else {
+            emitByte(OP_POP);
+        }
         current->localCount--;
     }
     current->scopeDepth--;
