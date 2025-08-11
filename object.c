@@ -75,6 +75,12 @@ ObjFunction* newFunction() {
     return function;
 }
 
+ObjClosure* newClosure(ObjFunction* function) {
+    ObjClosure* closure = ALLOCATE_OBJ(ObjClosure, OBJ_CLOSURE);
+    closure->function = function;
+    return closure;
+}
+
 ObjArray* newArray(Value* values, uint8_t count) {
     ObjArray* array = ALLOCATE_OBJ(ObjArray, OBJ_ARRAY);
     initValueArrayCopy(&array->valueArray, values, count);

@@ -1,1 +1,13 @@
-print [] << 0 << 1 << 2 << 3;
+def append(array, n) {
+    array << n;
+}
+
+var array = [];
+append(array, 0);
+append(array, 0);
+append(array, 0);
+append(array, 0);
+append(array, 0);
+append(array, 0);
+
+print array;
