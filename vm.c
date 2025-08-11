@@ -123,8 +123,8 @@ InterpretResult run() {
             printf(" ]");
         }
         printf("\n");
-        disassembleInstruction(&frame->function->chunk,
-        (int)(frame->ip - frame->function->chunk.code));
+        disassembleInstruction(&frame->closure->function->chunk,
+        (int)(frame->ip - frame->closure->function->chunk.code));
     #endif
         uint8_t instruction;
         switch (instruction = READ_BYTE()) {
