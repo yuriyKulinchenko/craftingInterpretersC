@@ -40,6 +40,7 @@ typedef enum {
     OP_SET_ARRAY,
     OP_APPEND,
     OP_DUPLICATE,
+    OP_CLOSURE,
 } OpCode;
 
 typedef struct {

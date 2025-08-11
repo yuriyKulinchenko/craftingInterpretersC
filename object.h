@@ -14,11 +14,13 @@
 #define IS_STRING(value) isObjType(value, OBJ_STRING)
 #define IS_FUNCTION(value) isObjType(value, OBJ_FUNCTION)
 #define IS_ARRAY(value) isObjType(value, OBJ_ARRAY)
+#define IS_CLOSURE(value) isObjType(value, OBJ_CLOSURE)
 
 #define AS_STRING(value) ((ObjString*)AS_OBJ(value))
 #define AS_CSTRING(value) (((ObjString*)AS_OBJ(value))->chars)
 #define AS_FUNCTION(value) ((ObjFunction*)AS_OBJ(value))
 #define AS_ARRAY(value) ((ObjArray*)AS_OBJ(value))
+#define AS_CLOSURE(value) ((ObjClosure*)AS_OBJ(value))
 
 
 typedef enum {

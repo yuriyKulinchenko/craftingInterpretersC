@@ -24,8 +24,8 @@ static void runtimeError(const char* format, ...) {
     fputs("\n", stderr);
 
     CallFrame* frame = &vm.frames[vm.frameCount - 1];
-    size_t instruction = frame->ip - frame->function->chunk.code - 1;
-    int line = frame->function->chunk.lines[instruction];
+    size_t instruction = frame->ip - frame->closure->function->chunk.code - 1;
+    int line = frame->closure->function->chunk.lines[instruction];
     fprintf(stderr, "[line %d] in script\n", line);
     resetStack();
 }
@@ -79,11 +79,16 @@ void concatenate() {
     push(OBJ_VAL(result));
 }
 
-void addFrame(ObjFunction* function, uint8_t argumentCount) {
+bool addFrame(ObjClosure* closure, uint8_t argumentCount) {
+    if (argumentCount != closure->function->arity) {
+        runtimeError("Incorrect number of arguments passed into function");
+        return false;
+    }
     CallFrame* frame = &vm.frames[vm.frameCount++];
-    frame->function = function;
-    frame->ip = function->chunk.code;
+    frame->closure = closure;
+    frame->ip = closure->function->chunk.code;
     frame->slots = vm.stackTop - argumentCount - 1;
+    return true;
 }
 
 void popFrame() {
@@ -95,7 +100,7 @@ void popFrame() {
 InterpretResult run() {
 #define READ_BYTE() (*frame->ip++)
 #define READ_SHORT() (frame->ip += 2, (uint16_t)((frame->ip[-2] << 8) | frame->ip[-1]))
-#define READ_CONSTANT() (frame->function->chunk.constants.values[READ_BYTE()])
+#define READ_CONSTANT() (frame->closure->function->chunk.constants.values[READ_BYTE()])
 #define READ_STRING() AS_STRING(READ_CONSTANT())
 #define BINARY_OP(valueType ,op) \
     do { \
@@ -251,13 +256,25 @@ InterpretResult run() {
 
             case OP_CALL: {
                 uint8_t argumentCount = READ_BYTE();
-                Value callable = peek(argumentCount);
-                if (!IS_FUNCTION(callable)) {
+                Value value = peek(argumentCount);
+                if (!IS_OBJ(value)) {
                     runtimeError("Can only call functions");
                     return INTERPRET_RUNTIME_ERROR;
                 }
-                ObjFunction* function = AS_FUNCTION(callable);
-                addFrame(function, argumentCount);
+                Obj* callable = AS_OBJ(value);
+                switch (callable->type) {
+                    case OBJ_CLOSURE: {
+                        ObjClosure* closure = (ObjClosure*) callable;
+                        bool callSuccess = addFrame(closure, argumentCount);
+                        if (!callSuccess) return INTERPRET_RUNTIME_ERROR;
+                        break;
+                    }
+
+                    default: {
+                        runtimeError("Can only call functions");
+                        return INTERPRET_RUNTIME_ERROR;
+                    }
+                }
                 break;
             }
 
@@ -327,6 +344,13 @@ InterpretResult run() {
                 break;
             }
 
+            case OP_CLOSURE: {
+                ObjFunction* function = AS_FUNCTION(READ_CONSTANT());
+                ObjClosure* closure = newClosure(function);
+                push(OBJ_VAL(closure));
+                break;
+            }
+
         }
     }
 #undef READ_CONSTANT
@@ -337,14 +361,17 @@ InterpretResult run() {
 }
 
 InterpretResult interpret(const char* source) {
+    // Wrap function in a closure:
     ObjFunction* function = compile(source);
     if (function == NULL) return INTERPRET_COMPILE_ERROR;
+    ObjClosure* closure = newClosure(function);
+
 
     // Put the 'main' callable on the stack
 
-    push(OBJ_VAL(function));
+    push(OBJ_VAL(closure));
     CallFrame* frame = &vm.frames[vm.frameCount++];
-    frame->function = function;
+    frame->closure = newClosure(function);
     frame->ip = function->chunk.code;
     frame->slots = vm.stack;
 

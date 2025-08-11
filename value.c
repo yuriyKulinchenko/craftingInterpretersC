@@ -53,8 +53,6 @@ void freeValueArray(ValueArray* array) {
     reallocate(array->values, array->capacity, 0);
 }
 
-char* valueToString(Value value);
-
 char* arrayToString(ObjArray* array) {
     char* chars = strdup("[");
     bool isFirst = true;
@@ -87,6 +85,10 @@ char* objToString(Obj* object) {
             char* chars = string->chars;
             asprintf(&returnChars, "\"%s\"", chars);
             break;
+        }
+        case OBJ_CLOSURE: {
+            ObjClosure* closure = (ObjClosure*) object;
+            return objToString((Obj*) closure->function);
         }
         case OBJ_FUNCTION: {
             ObjFunction* function = (ObjFunction*) object;
