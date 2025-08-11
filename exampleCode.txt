@@ -1,13 +1,11 @@
-def append(array, n) {
-    array << n;
+def outer() {
+    var outer;
+    def middle() {
+        var middle;
+        print outer;
+        def inner() {
+            print middle;
+            print outer;
+        }
+    }
 }
-
-var array = [];
-append(array, 0);
-append(array, 0);
-append(array, 0);
-append(array, 0);
-append(array, 0);
-append(array, 0);
-
-print array;

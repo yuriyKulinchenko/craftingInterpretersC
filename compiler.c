@@ -59,12 +59,18 @@ typedef enum {
     TYPE_SCRIPT
 } FunctionType;
 
+typedef struct {
+    uint8_t index;
+    bool isLocal;
+} Upvalue;
+
 typedef struct Compiler {
     struct Compiler* enclosing;
     ObjFunction* function;
     FunctionType type;
 
     Local locals[UINT8_COUNT];
+    Upvalue upvalues[UINT8_COUNT];
     int localCount;
     int scopeDepth;
 
@@ -595,6 +601,39 @@ int resolveLocal(Compiler* compiler, Token* token) {
     return -1;
 }
 
+static int addUpvalue(Compiler* compiler, uint8_t index, bool isLocal) {
+    for (int i = 0; i < compiler->function->upvalueCount; i++) {
+        if (compiler->upvalues[i].index == index &&
+            compiler->upvalues[i].isLocal == isLocal) {
+            return i;
+        }
+    }
+    Upvalue* upvalue = &compiler->upvalues[compiler->function->upvalueCount++];
+    upvalue->index = index;
+    upvalue->isLocal = isLocal;
+    return compiler->function->upvalueCount - 1;
+
+}
+
+int resolveUpvalue(Compiler* compiler, Token* token) {
+    if (compiler->enclosing == NULL) {
+        return -1;
+    }
+    int index = resolveLocal(compiler->enclosing, token);
+    // Check if upvalue is one scope out
+    if (index != -1) {
+        return addUpvalue(compiler, (uint8_t)index, true);
+    }
+
+    // Otherwise, recursively resolve compiler->enclosing
+    index = resolveUpvalue(compiler->enclosing, token);
+    if (index != -1) {
+        return addUpvalue(compiler, (uint8_t)index, false);
+    }
+
+    return -1;
+}
+
 int currentDepthLocals(Compiler* compiler) {
     int count = 0;
     for (int i = compiler->localCount - 1; i >= 0; i--) {
@@ -613,6 +652,9 @@ static void namedVariable(Token name, bool canAssign) {
     if (arg != -1) {
         getOp = OP_GET_LOCAL;
         setOp = OP_SET_LOCAL;
+    } else if ((arg = resolveUpvalue(current, &name)) != -1) {
+        getOp = OP_GET_UPVALUE;
+        setOp = OP_SET_UPVALUE;
     } else {
         arg = identifierConstant(&name);
         getOp = OP_GET_GLOBAL;

@@ -351,6 +351,16 @@ InterpretResult run() {
                 break;
             }
 
+            case OP_GET_UPVALUE: {
+                printf("OP_GET_UPVALUE executed\n");
+                return INTERPRET_OK;
+            }
+
+            case OP_SET_UPVALUE: {
+                printf("OP_SET_UPVALUE executed\n");
+                return INTERPRET_OK;
+            }
+
         }
     }
 #undef READ_CONSTANT
@@ -370,15 +380,13 @@ InterpretResult interpret(const char* source) {
     // Put the 'main' callable on the stack
 
     push(OBJ_VAL(closure));
-    CallFrame* frame = &vm.frames[vm.frameCount++];
-    frame->closure = newClosure(function);
-    frame->ip = function->chunk.code;
-    frame->slots = vm.stack;
+    addFrame(closure, 0);
 
     return run();
 }
 
 void printObjects() {
+    // Needs to be fixed
     Obj* ptr = vm.objects;
     while (ptr != NULL) {
         ObjString* string = (ObjString*) ptr;
