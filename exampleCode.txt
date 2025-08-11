@@ -1,11 +1,15 @@
 def outer() {
-    var outer;
+    var outer = "outer";
     def middle() {
-        var middle;
+        var middle = "middle";
         print outer;
         def inner() {
             print middle;
             print outer;
         }
+        inner();
     }
+    middle();
 }
+
+outer();

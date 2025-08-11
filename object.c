@@ -79,7 +79,18 @@ ObjFunction* newFunction() {
 ObjClosure* newClosure(ObjFunction* function) {
     ObjClosure* closure = ALLOCATE_OBJ(ObjClosure, OBJ_CLOSURE);
     closure->function = function;
+    closure->upvalueCount = function->upvalueCount;
+    closure->upvalues = ALLOCATE(ObjUpvalue*, closure->upvalueCount);
+    for (int i = 0; i < closure->upvalueCount; i++) {
+        closure->upvalues[i] = NULL;
+    }
     return closure;
+}
+
+ObjUpvalue* newUpvalue(Value* value) {
+    ObjUpvalue* upvalue = ALLOCATE_OBJ(ObjUpvalue, OBJ_UPVALUE);
+    upvalue->location = value;
+    return upvalue;
 }
 
 ObjArray* newArray(Value* values, uint8_t count) {

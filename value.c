@@ -100,6 +100,10 @@ char* objToString(Obj* object) {
             ObjArray* array = (ObjArray*) object;
             return arrayToString(array);
         }
+
+        case OBJ_UPVALUE: {
+            return strdup("upvalue");
+        }
         default: asprintf(&returnChars, "unrecognized object"); break;
     }
     return returnChars;

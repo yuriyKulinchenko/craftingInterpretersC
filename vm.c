@@ -97,6 +97,11 @@ void popFrame() {
     vm.frameCount--;
 }
 
+static ObjUpvalue* captureUpvalue(Value* local) {
+    ObjUpvalue* createdUpvalue = newUpvalue(local);
+    return createdUpvalue;
+}
+
 InterpretResult run() {
 #define READ_BYTE() (*frame->ip++)
 #define READ_SHORT() (frame->ip += 2, (uint16_t)((frame->ip[-2] << 8) | frame->ip[-1]))
@@ -348,17 +353,31 @@ InterpretResult run() {
                 ObjFunction* function = AS_FUNCTION(READ_CONSTANT());
                 ObjClosure* closure = newClosure(function);
                 push(OBJ_VAL(closure));
+                for (int i = 0; i < closure->upvalueCount; i++) {
+                    bool isLocal = READ_BYTE() == 1;
+                    uint8_t index = READ_BYTE();
+                    ObjUpvalue* upvalue;
+                    if (isLocal) {
+                        upvalue = captureUpvalue(frame->slots + index);
+                    } else {
+                        upvalue = frame->closure->upvalues[index];
+                    }
+                    closure->upvalues[i] = upvalue;
+                }
                 break;
             }
 
             case OP_GET_UPVALUE: {
-                printf("OP_GET_UPVALUE executed\n");
-                return INTERPRET_OK;
+                uint8_t index = READ_BYTE();
+                push(*frame->closure->upvalues[index]->location);
+                break;
             }
 
             case OP_SET_UPVALUE: {
-                printf("OP_SET_UPVALUE executed\n");
-                return INTERPRET_OK;
+                uint8_t index = READ_BYTE();
+                Value value = peek(0);
+                *frame->closure->upvalues[index]->location = value;
+                break;
             }
 
         }
