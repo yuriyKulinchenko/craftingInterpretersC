@@ -715,7 +715,7 @@ static void function(FunctionType type) {
 
     // Compile parameters
     if (type == TYPE_ANONYMOUS && check(TOKEN_IDENTIFIER)) {
-        current->function->arity = 0;
+        current->function->arity = 1;
         uint8_t param = parseVariable("Expect parameter name");
         defineVariable(param);
     } else {
