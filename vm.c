@@ -14,6 +14,7 @@ VM vm;
 void resetStack() {
     vm.stackTop = vm.stack;
     vm.frameCount = 0;
+    vm.openUpvalues = NULL;
 }
 
 static void runtimeError(const char* format, ...) {
@@ -98,8 +99,31 @@ void popFrame() {
 }
 
 static ObjUpvalue* captureUpvalue(Value* local) {
+    ObjUpvalue* prevUpvalue = NULL;
+    ObjUpvalue* upvalue = vm.openUpvalues;
+
+    while (upvalue != NULL && upvalue->location > local) {
+        // vm.openUpvalues is sorted, so traversal like this is possible:
+        prevUpvalue = upvalue;
+        upvalue = upvalue->next;
+    }
+
+    // Now, upvalue->location <= local
+
+    if (upvalue != NULL && upvalue->location == local) {
+        return upvalue;
+    }
+
     ObjUpvalue* createdUpvalue = newUpvalue(local);
-    return createdUpvalue;
+    createdUpvalue->next = upvalue;
+
+    if (prevUpvalue == NULL) {
+        vm.openUpvalues = createdUpvalue;
+    } else {
+        prevUpvalue->next = createdUpvalue;
+    }
+
+    return upvalue;
 }
 
 InterpretResult run() {

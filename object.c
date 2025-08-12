@@ -90,6 +90,7 @@ ObjClosure* newClosure(ObjFunction* function) {
 ObjUpvalue* newUpvalue(Value* value) {
     ObjUpvalue* upvalue = ALLOCATE_OBJ(ObjUpvalue, OBJ_UPVALUE);
     upvalue->location = value;
+    upvalue->next = NULL;
     return upvalue;
 }
 
