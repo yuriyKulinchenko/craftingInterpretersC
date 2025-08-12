@@ -81,6 +81,12 @@ typedef struct Compiler {
     LoopState loopState;
 } Compiler;
 
+typedef struct {
+    int lambdaCount;
+} GlobalCompilerState;
+
+
+GlobalCompilerState globalCompilerState = {.lambdaCount = 0};
 Parser parser;
 Compiler* current = NULL;
 
@@ -103,7 +109,10 @@ void initCompiler(Compiler* compiler, FunctionType type) {
 
     if (type != TYPE_SCRIPT) {
         if (type == TYPE_ANONYMOUS) {
-            current->function->name = copyString("lambda", 6);
+            char* name;
+            asprintf(&name, "lambda:%d", globalCompilerState.lambdaCount++);
+            int length = (int) strlen(name);
+            current->function->name = takeString(name, length);
         } else {
             current->function->name = copyString(parser.previous.start,
             parser.previous.length);
@@ -338,7 +347,8 @@ static ObjFunction* endCompiler() {
 static uint8_t makeConstant(Value value) {
     Value returnValue;
     ObjString* key = valueKey(value);
-    if (tableGet(&current->constants, key, &returnValue)) {
+    // Only intern primitive values
+    if (key != NULL && tableGet(&current->constants, key, &returnValue)) {
         return (uint8_t) AS_NUMBER(returnValue);
     }
 
@@ -349,7 +359,9 @@ static uint8_t makeConstant(Value value) {
         return 0;
     }
 
-    tableSet(&current->constants, key, NUMBER_VAL(constant));
+    if (key != NULL) {
+        tableSet(&current->constants, key, NUMBER_VAL(constant));
+    }
     return (uint8_t)constant;
 }
 

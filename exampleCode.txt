@@ -1,9 +1,6 @@
-def f() {
-    var a = 2;
-    def g() {
-        print a;
-    }
-    g();
-}
+var factorial = (fun (self) {return self(self);})
+(fun (self) {
+        return fun (n) {return n == 0 ? 1 : n * self(self)(n-1);};
+});
 
-f();
+print factorial(5);
