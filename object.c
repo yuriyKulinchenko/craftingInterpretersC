@@ -91,6 +91,7 @@ ObjUpvalue* newUpvalue(Value* value) {
     ObjUpvalue* upvalue = ALLOCATE_OBJ(ObjUpvalue, OBJ_UPVALUE);
     upvalue->location = value;
     upvalue->next = NULL;
+    upvalue->closed = NIL_VAL;
     return upvalue;
 }
 

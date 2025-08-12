@@ -123,7 +123,16 @@ static ObjUpvalue* captureUpvalue(Value* local) {
         prevUpvalue->next = createdUpvalue;
     }
 
-    return upvalue;
+    return createdUpvalue;
+}
+
+static void closeUpvalue(Value* value) {
+    while (vm.openUpvalues != NULL && vm.openUpvalues->location >= value) {
+        ObjUpvalue* upvalue = vm.openUpvalues;
+        upvalue->closed = *upvalue->location;
+        upvalue->location = &upvalue->closed;
+        vm.openUpvalues = upvalue->next;
+        }
 }
 
 InterpretResult run() {
@@ -160,6 +169,7 @@ InterpretResult run() {
             case OP_RETURN: {
                 if (vm.frameCount == 1) return INTERPRET_OK;
                 Value value = pop();
+                closeUpvalue(frame->slots);
                 popFrame();
                 push(value);
                 break;
@@ -405,8 +415,8 @@ InterpretResult run() {
             }
 
             case OP_CLOSE_UPVALUE: {
+                closeUpvalue(vm.stackTop - 1);
                 pop();
-                printf("Closed upvalue\n");
                 break;
             }
 
