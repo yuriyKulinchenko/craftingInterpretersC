@@ -1,11 +1,16 @@
 #include "memory.h"
-
-#include <stdlib.h>
-
 #include "object.h"
 #include "vm.h"
 
+#include <stdlib.h>
+
 void* reallocate(void* p, size_t oldSize, size_t newSize) {
+    if (newSize > oldSize) {
+#ifdef DEBUG_STRESS_GC
+    collectGarbage();
+#endif
+    }
+
     if (newSize == 0) {
         free(p);
         return NULL;
@@ -61,4 +66,15 @@ void freeObjects() {
         ptr = nextPtr;
     }
     vm.objects = NULL;
+}
+
+void collectGarbage() {
+#ifdef DEBUG_LOG_GC
+    printf("-- gc begin\n");
+#endif
+
+
+#ifdef DEBUG_LOG_GC
+    printf("-- gc end\n");
+#endif
 }

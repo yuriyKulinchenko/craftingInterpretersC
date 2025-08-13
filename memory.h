@@ -16,6 +16,7 @@
 
 #define FREE(type, pointer) reallocate(pointer, sizeof(type), 0)
 
+void collectGarbage();
 void* reallocate(void* p, size_t oldSize, size_t newSize);
 void freeObjects();
 
