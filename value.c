@@ -149,12 +149,6 @@ ObjString* valueKey(Value value) {
                 case OBJ_STRING: {
                     prefix = "STRING"; break;
                 }
-                case OBJ_FUNCTION: {
-                    return NULL;
-                }
-                case OBJ_ARRAY: {
-                    return NULL;
-                }
                 default: return NULL;
             }
             break;

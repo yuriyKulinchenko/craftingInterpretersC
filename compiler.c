@@ -345,14 +345,13 @@ static ObjFunction* endCompiler() {
 }
 
 static uint8_t makeConstant(Value value) {
-    // Value returnValue;
-    // ObjString* key = valueKey(value);
-    // Only intern primitive values
-
-    // TEMPORARY: NO INTERNING
-    // if (key != NULL && tableGet(&current->constants, key, &returnValue)) {
-    //     return (uint8_t) AS_NUMBER(returnValue);
-    // }
+    Value returnValue;
+    ObjString* key = valueKey(value);
+    push(OBJ_VAL((Obj*)key));
+    if (key != NULL && tableGet(&current->constants, key, &returnValue)) {
+        pop();
+        return (uint8_t) AS_NUMBER(returnValue);
+    }
 
 
     int constant = addConstant(currentChunk(), value);
@@ -361,9 +360,10 @@ static uint8_t makeConstant(Value value) {
         return 0;
     }
 
-    // if (key != NULL) {
-    //     tableSet(&current->constants, key, NUMBER_VAL(constant));
-    // }
+    if (key != NULL) {
+        tableSet(&current->constants, key, NUMBER_VAL(constant));
+    }
+    pop();
     return (uint8_t)constant;
 }
 
@@ -1026,6 +1026,6 @@ void markCompilerRoots() {
     // Traverse list of compilers
     for (Compiler* compiler = current; compiler != NULL; compiler = compiler->enclosing) {
         markObject((Obj*) compiler->function);
-        // markTable(&compiler->constants);
+        markTable(&compiler->constants);
     }
 }
