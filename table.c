@@ -178,3 +178,13 @@ void printTable(Table* table) {
     printf("===END_TABLE_DEBUG===\n");
 #endif
 }
+
+void markTable(Table* table) {
+    for (int i = 0; i < table->capacity; i++) {
+        Entry* entry = &table->entries[i];
+        if (entry->key != NULL) {
+            markObject((Obj*) entry->key);
+            markValue(entry->value);
+        }
+    }
+}

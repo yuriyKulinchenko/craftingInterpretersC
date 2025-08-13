@@ -1019,3 +1019,10 @@ ObjFunction* compile(const char* source) {
     ObjFunction* function = endCompiler();
     return parser.hadError ? NULL : function;
 }
+
+void markCompilerRoots() {
+    // Traverse list of compilers
+    for (Compiler* compiler = current; compiler != NULL; compiler = compiler->enclosing) {
+        markObject((Obj*) compiler->function);
+    }
+}
