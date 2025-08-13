@@ -70,18 +70,34 @@ void freeObjects() {
         ptr = nextPtr;
     }
     vm.objects = NULL;
+    free(vm.grayStack);
 }
 
 
 
 void markObject(Obj* object) {
+    // Marking an object adds it to the gray stack
     if (object == NULL) return;
+    if (object->isMarked) return;
 #ifdef DEBUG_LOG_GC
     printf("%p mark ", (void*)object);
     printValue(OBJ_VAL(object));
     printf("\n");
 #endif
     object->isMarked = true;
+
+    if (vm.grayCount + 1 > vm.grayCapacity) {
+        int oldCapacity = vm.grayCapacity;
+        vm.grayCapacity = oldCapacity < 8 ? 8 : 2 * oldCapacity;
+        Obj** newPtr = realloc(vm.grayStack, sizeof(Obj*) * vm.grayCapacity);
+        if (newPtr == NULL) {
+            free(vm.grayStack);
+            exit(1);
+        }
+        vm.grayStack = newPtr;
+    }
+
+    vm.grayStack[vm.grayCount++] = object;
 }
 
 void markValue(Value value) {
@@ -107,12 +123,68 @@ static void markRoots() {
     markCompilerRoots();
 }
 
+static void blackenObject(Obj* object) {
+    // The object has already been moved out of the gray stack
+    // Mark all objects reachable that are accessible through 'object'
+#ifdef DEBUG_LOG_GC
+    printf("%p blacken ", (void*)object);
+    printValue(OBJ_VAL(object));
+    printf("\n");
+#endif
+    switch (object->type) {
+
+        case OBJ_FUNCTION: {
+            const ObjFunction* function = (ObjFunction*) object;
+            for (int i = 0; i < function->chunk.constants.count; i++) {
+                markValue(function->chunk.constants.values[i]);
+                markObject((Obj*)function->name);
+            }
+            break;
+        }
+
+        case OBJ_ARRAY: {
+            const ObjArray* array = (ObjArray*) object;
+            for (int i = 0; i < array->valueArray.count; i++) {
+                const Value value = array->valueArray.values[i];
+                markValue(value);
+            }
+            break;
+        }
+
+        case OBJ_CLOSURE: {
+            const ObjClosure* closure = (ObjClosure*) object;
+            markObject((Obj*)closure->function);
+            for (int i = 0; i < closure->upvalueCount; i++) {
+                markObject((Obj*)closure->upvalues[i]);
+            }
+            break;
+        }
+
+        case OBJ_UPVALUE: {
+            const ObjUpvalue* upvalue = (ObjUpvalue*) object;
+            markValue(upvalue->closed);
+            break;
+        }
+
+        default: break;
+    }
+}
+
+static void trackReferences() {
+    while (vm.grayCount > 0) {
+        Obj* object = vm.grayStack[vm.grayCount - 1];
+        blackenObject(object);
+        vm.grayCount--;
+    }
+}
+
 void collectGarbage() {
 #ifdef DEBUG_LOG_GC
     printf("-- gc begin\n");
 #endif
 
     markRoots();
+    trackReferences();
 
 #ifdef DEBUG_LOG_GC
     printf("-- gc end\n");

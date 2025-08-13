@@ -34,6 +34,11 @@ static void runtimeError(const char* format, ...) {
 void initVM() {
     resetStack();
     vm.objects = NULL;
+
+    vm.grayCapacity = 0;
+    vm.grayCount = 0;
+    vm.grayStack = NULL;
+
     initTable(&vm.strings);
     initTable(&vm.globals);
 }
