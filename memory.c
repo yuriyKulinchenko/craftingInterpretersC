@@ -3,6 +3,7 @@
 #include "vm.h"
 #include "compiler.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 
 void* reallocate(void* p, size_t oldSize, size_t newSize) {
@@ -21,11 +22,9 @@ void* reallocate(void* p, size_t oldSize, size_t newSize) {
     return result;
 }
 
-#include <stdio.h>
-
 static void freeObject(Obj* object) {
 #ifdef DEBUG_LOG_GC
-    printf("%p free type %d\n", (void*)object, object->type);
+    printf("    free: %s\n", valueToString(OBJ_VAL(object)));
 #endif
     switch (object->type) {
         case OBJ_STRING: {
@@ -80,9 +79,7 @@ void markObject(Obj* object) {
     if (object == NULL) return;
     if (object->isMarked) return;
 #ifdef DEBUG_LOG_GC
-    printf("%p mark ", (void*)object);
-    printValue(OBJ_VAL(object));
-    printf("\n");
+    printf("    mark: %s\n", valueToString(OBJ_VAL(object)));
 #endif
     object->isMarked = true;
 
@@ -127,17 +124,15 @@ static void blackenObject(Obj* object) {
     // The object has already been moved out of the gray stack
     // Mark all objects reachable that are accessible through 'object'
 #ifdef DEBUG_LOG_GC
-    printf("%p blacken ", (void*)object);
-    printValue(OBJ_VAL(object));
-    printf("\n");
+    printf("    blacken: %s\n", valueToString(OBJ_VAL(object)));
 #endif
     switch (object->type) {
 
         case OBJ_FUNCTION: {
             const ObjFunction* function = (ObjFunction*) object;
+            markObject((Obj*)function->name);
             for (int i = 0; i < function->chunk.constants.count; i++) {
                 markValue(function->chunk.constants.values[i]);
-                markObject((Obj*)function->name);
             }
             break;
         }
@@ -203,7 +198,7 @@ void sweep() {
 
 void collectGarbage() {
 #ifdef DEBUG_LOG_GC
-    printf("-- gc begin\n");
+    printf("-- GC begin\n");
 #endif
 
     markRoots();
@@ -211,6 +206,6 @@ void collectGarbage() {
     sweep();
 
 #ifdef DEBUG_LOG_GC
-    printf("-- gc end\n");
+    printf("-- GC end\n");
 #endif
 }

@@ -54,6 +54,6 @@ void freeValueArray(ValueArray* array);
 void printValue(Value value);
 char* valueToString(Value value);
 bool valuesEqual(Value a, Value b);
-ObjString* valueKey(Value value);
+// ObjString* valueKey(Value value);
 
 #endif

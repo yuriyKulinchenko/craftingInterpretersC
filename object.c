@@ -19,7 +19,7 @@ static Obj* allocateObject(size_t size, ObjType type) {
     vm.objects = object;
 
 #ifdef DEBUG_LOG_GC
-    printf("%p allocate %ld for %d\n", (void*)object, size, type);
+    printf("    allocated object\n");
 #endif
 
     return object;
@@ -40,7 +40,9 @@ static ObjString* allocateString(char* chars, int length, uint32_t hash) {
     string->chars = chars;
     string->hash = hash;
 
+    push(OBJ_VAL(string));
     tableSet(&vm.strings, string, NIL_VAL);
+    pop();
 
     return string;
 }

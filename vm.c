@@ -437,9 +437,10 @@ InterpretResult run() {
 InterpretResult interpret(const char* source) {
     // Wrap function in a closure:
     ObjFunction* function = compile(source);
+    push(OBJ_VAL((Obj*)function));
     if (function == NULL) return INTERPRET_COMPILE_ERROR;
     ObjClosure* closure = newClosure(function);
-
+    pop();
 
     // Put the 'main' callable on the stack
 
