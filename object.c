@@ -85,12 +85,14 @@ ObjFunction* newFunction() {
 
 ObjClosure* newClosure(ObjFunction* function) {
     ObjClosure* closure = ALLOCATE_OBJ(ObjClosure, OBJ_CLOSURE);
+    push(OBJ_VAL(closure));
     closure->function = function;
     closure->upvalueCount = function->upvalueCount;
     closure->upvalues = ALLOCATE(ObjUpvalue*, closure->upvalueCount);
     for (int i = 0; i < closure->upvalueCount; i++) {
         closure->upvalues[i] = NULL;
     }
+    pop();
     return closure;
 }
 

@@ -88,12 +88,15 @@ char* objToString(Obj* object) {
         }
         case OBJ_CLOSURE: {
             ObjClosure* closure = (ObjClosure*) object;
-            return objToString((Obj*) closure->function);
+            ObjFunction* function = closure->function;
+            char* chars = function->name == NULL ? "script" : function->name->chars;
+            asprintf(&returnChars, "<%s>", chars);
+            break;
         }
         case OBJ_FUNCTION: {
             ObjFunction* function = (ObjFunction*) object;
             char* chars = function->name == NULL ? "script" : function->name->chars;
-            asprintf(&returnChars, "<%s>", chars);
+            asprintf(&returnChars, "<raw:%s>", chars);
             break;
         }
         case OBJ_ARRAY: {
@@ -143,16 +146,6 @@ ObjString* valueKey(Value value) {
         case VAL_NIL: prefix = "NIL"; break;
         case VAL_NUMBER: prefix = "NUMBER"; break;
         case VAL_BOOL: prefix = "BOOL"; break;
-        case VAL_OBJ: {
-            Obj* object = AS_OBJ(value);
-            switch (object->type) {
-                case OBJ_STRING: {
-                    prefix = "STRING"; break;
-                }
-                default: return NULL;
-            }
-            break;
-        }
         default: return NULL;
     }
 

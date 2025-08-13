@@ -1,4 +1,8 @@
-0;
-0;
-1;
-1;
+def curry (x) {
+    def f(y) {
+        return x + y;
+    }
+    return f;
+}
+
+print curry(2)(3);

@@ -390,7 +390,9 @@ InterpretResult run() {
 
             case OP_CLOSURE: {
                 ObjFunction* function = AS_FUNCTION(READ_CONSTANT());
+                push(OBJ_VAL(function));
                 ObjClosure* closure = newClosure(function);
+                pop();
                 push(OBJ_VAL(closure));
                 for (int i = 0; i < closure->upvalueCount; i++) {
                     bool isLocal = READ_BYTE() == 1;

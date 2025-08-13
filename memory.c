@@ -117,6 +117,7 @@ static void markRoots() {
     }
 
     markTable(&vm.globals);
+    // markTable(&vm.strings);
     markCompilerRoots();
 }
 
@@ -168,8 +169,8 @@ static void blackenObject(Obj* object) {
 static void trackReferences() {
     while (vm.grayCount > 0) {
         Obj* object = vm.grayStack[vm.grayCount - 1];
-        blackenObject(object);
         vm.grayCount--;
+        blackenObject(object);
     }
 }
 
