@@ -9,7 +9,7 @@
 #include "value.h"
 
 #define TABLE_MAX_LOAD 0.75
-// #define TABLE_DEBUG
+#define TABLE_DEBUG
 
 void initTable(Table* table) {
     table->count = 0;
@@ -121,9 +121,13 @@ ObjString* tableFindString(Table* table, char* chars, int length, uint32_t hash)
     uint32_t index = hash % table->capacity;
     for (;;) {
         Entry* entry = &table->entries[index];
-        if (entry->key == NULL && !AS_BOOL(entry->value)) return NULL;
-        if (entry->key->hash == hash && entry->key->length == length &&
-            memcmp(chars, entry->key->chars, length) == 0) return entry->key;
+        if (entry->key == NULL) {
+            if (!AS_BOOL(entry->value)) return NULL;
+        } else {
+            if (entry->key == NULL && !AS_BOOL(entry->value)) return NULL;
+            if (entry->key->hash == hash && entry->key->length == length &&
+                memcmp(chars, entry->key->chars, length) == 0) return entry->key;
+        }
         index = (index + 1) % table->capacity;
     }
 }

@@ -1,8 +1,12 @@
-def curry (x) {
-    def f(y) {
-        return x + y;
+def fixedPoint(self) {
+    return self(self);
+}
+
+def factorial(self) {
+    def f(n) {
+        return n == 0 ? 1 : n * self(self)(n - 1);
     }
     return f;
 }
 
-print curry(2)(3);
+print fixedPoint(factorial)(5);
