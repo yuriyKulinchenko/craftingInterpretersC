@@ -73,8 +73,8 @@ static bool isFalsey(Value value) {
 }
 
 void concatenate() {
-    ObjString* bString = AS_STRING(pop());
-    ObjString* aString = AS_STRING(pop());
+    ObjString* bString = AS_STRING(peek(0));
+    ObjString* aString = AS_STRING(peek(1));
     // Dynamically allocate new object
     int length = aString->length + bString->length;
     char* chars = ALLOCATE(char, length + 1);
@@ -82,6 +82,8 @@ void concatenate() {
     memcpy(chars + aString->length, bString->chars, bString->length);
     chars[length] = '\0';
     ObjString* result = takeString(chars, length);
+    pop();
+    pop();
     push(OBJ_VAL(result));
 }
 

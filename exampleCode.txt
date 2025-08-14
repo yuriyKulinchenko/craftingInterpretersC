@@ -1,4 +1,1 @@
-print
-(fun self -> self(self))
-(fun self -> fun n -> n == 0 ? 1 : n * self(self)(n-1))
-(5);
+print ("hel" + "lo") + (" " + "world");
