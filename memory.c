@@ -6,11 +6,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define GC_HEAP_GROW_FACTOR 2
+
 void* reallocate(void* p, size_t oldSize, size_t newSize) {
+    vm.bytesAllocated += newSize - oldSize;
+
     if (newSize > oldSize) {
 #ifdef DEBUG_STRESS_GC
     collectGarbage();
 #endif
+        if (vm.bytesAllocated > vm.nextGC) {
+            collectGarbage();
+        }
     }
 
     if (newSize == 0) {
@@ -200,6 +207,7 @@ void sweep() {
 void collectGarbage() {
 #ifdef DEBUG_LOG_GC
     printf("-- GC begin\n");
+    size_t oldAmount = vm.bytesAllocated;
 #endif
 
     markRoots();
@@ -207,7 +215,9 @@ void collectGarbage() {
     tableRemoveWhite(&vm.strings);
     sweep();
 
+    vm.nextGC = vm.bytesAllocated * GC_HEAP_GROW_FACTOR;
 #ifdef DEBUG_LOG_GC
     printf("-- GC end\n");
+    printf("-- GC freed %d bytes of memory\n", (int) (oldAmount - vm.bytesAllocated));
 #endif
 }

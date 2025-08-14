@@ -1,1 +1,8 @@
-print ("hel" + "lo") + (" " + "world");
+def garbage(count) {
+    var string = "string";
+    for(var i = 0; i < count; i++) {
+        print string + i;
+    }
+}
+
+garbage(10000);

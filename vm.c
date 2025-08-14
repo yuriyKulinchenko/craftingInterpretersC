@@ -39,6 +39,9 @@ void initVM() {
     vm.grayCount = 0;
     vm.grayStack = NULL;
 
+    vm.bytesAllocated = 0;
+    vm.nextGC = 1024 * 1024;
+
     initTable(&vm.strings);
     initTable(&vm.globals);
 }
@@ -73,9 +76,25 @@ static bool isFalsey(Value value) {
 }
 
 void concatenate() {
-    ObjString* bString = AS_STRING(peek(0));
-    ObjString* aString = AS_STRING(peek(1));
-    // Dynamically allocate new object
+    Value aValue = peek(1);
+    Value bValue = peek(0);
+    ObjString* aString;
+    ObjString* bString;
+
+    if (IS_NUMBER(aValue)) {
+        char* chars = valueToString(aValue);
+        aString = takeString(chars, (int) strlen(chars));
+    } else {
+        aString = AS_STRING(aValue);
+    }
+
+    if (IS_NUMBER(bValue)) {
+        char* chars = valueToString(bValue);
+        bString = takeString(chars, (int) strlen(chars));
+    } else {
+        bString = AS_STRING(bValue);
+    }
+
     int length = aString->length + bString->length;
     char* chars = ALLOCATE(char, length + 1);
     memcpy(chars, aString->chars, aString->length);
@@ -147,12 +166,13 @@ InterpretResult run() {
 #define READ_SHORT() (frame->ip += 2, (uint16_t)((frame->ip[-2] << 8) | frame->ip[-1]))
 #define READ_CONSTANT() (frame->closure->function->chunk.constants.values[READ_BYTE()])
 #define READ_STRING() AS_STRING(READ_CONSTANT())
+#define IS_ADDABLE(value) (IS_STRING(value) || IS_NUMBER(value))
 #define BINARY_OP(valueType ,op) \
     do { \
         Value b = pop(); \
         Value a = pop(); \
         if(!IS_NUMBER(a) || !IS_NUMBER(b)) { \
-            runtimeError("operands must be numbers"); \
+            runtimeError("Operands must be numbers"); \
             return INTERPRET_RUNTIME_ERROR; \
         } \
         push(valueType(AS_NUMBER(a) op AS_NUMBER(b))); \
@@ -192,10 +212,16 @@ InterpretResult run() {
             case OP_NOT: push(BOOL_VAL(isFalsey(pop()))); break;
 
             case OP_ADD: {
-                if (IS_STRING(peek(0)) && IS_STRING(peek(1))) {
+                if (!IS_ADDABLE(peek(0)) || !IS_ADDABLE(peek(1))) {
+                    runtimeError("Can only add strings or numbers");
+                }
+
+
+                if (IS_STRING(peek(0)) || IS_STRING(peek(1))) {
                     concatenate();
                     break;
                 }
+
                 BINARY_OP(NUMBER_VAL, +);
                 break;
             }
