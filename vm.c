@@ -223,8 +223,6 @@ InterpretResult run() {
             case OP_GET_GLOBAL: {
                 ObjString* identifier = READ_STRING();
                 Value value;
-                printTable(&vm.globals);
-                printf("\n");
                 bool globalExists = tableGet(&vm.globals, identifier, &value);
                 if (globalExists) {
                     push(value);

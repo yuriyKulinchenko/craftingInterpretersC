@@ -203,8 +203,8 @@ void collectGarbage() {
 #endif
 
     markRoots();
-    tableRemoveWhite(&vm.strings);
     trackReferences();
+    tableRemoveWhite(&vm.strings);
     sweep();
 
 #ifdef DEBUG_LOG_GC

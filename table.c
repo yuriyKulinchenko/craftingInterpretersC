@@ -9,7 +9,7 @@
 #include "value.h"
 
 #define TABLE_MAX_LOAD 0.75
-#define TABLE_DEBUG
+// #define TABLE_DEBUG
 
 void initTable(Table* table) {
     table->count = 0;

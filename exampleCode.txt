@@ -1,12 +1,4 @@
-def fixedPoint(self) {
-    return self(self);
-}
-
-def factorial(self) {
-    def f(n) {
-        return n == 0 ? 1 : n * self(self)(n - 1);
-    }
-    return f;
-}
-
-print fixedPoint(factorial)(5);
+print
+(fun self -> self(self))
+(fun self -> fun n -> n == 0 ? 1 : n * self(self)(n-1))
+(5);
