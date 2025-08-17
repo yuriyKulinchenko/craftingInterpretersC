@@ -1,5 +1,5 @@
-class ExampleClass {}
-var instance = ExampleClass();
-instance.x = ExampleClass();
-instance.x.y = 10;
-print instance.x.y;
+class Example {}
+var instance = Example();
+instance["x"] = "Example value";
+print instance["x"];
+print ([] << 0 << 1 << 2).length;

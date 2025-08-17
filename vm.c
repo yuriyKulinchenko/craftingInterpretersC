@@ -162,6 +162,46 @@ static void closeUpvalue(Value* value) {
         }
 }
 
+static bool setProperty(Value instanceValue, ObjString* propertyName, Value value) {
+    if (!IS_INSTANCE(instanceValue)) {
+        runtimeError("Can only set property of instance");
+        return false;
+    }
+    ObjInstance* instance = AS_INSTANCE(instanceValue);
+    tableSet(&instance->fields, propertyName, value);
+    return true;
+}
+
+static bool getProperty(Value instanceValue, ObjString* propertyName, Value* value) {
+    if (IS_ARRAY(instanceValue)) {
+        if (propertyName->length != 6 || memcmp(propertyName->chars, "length", 6) != 0) {
+            runtimeError("Can only access length property of array");
+            return false;
+        }
+        ObjArray* array = AS_ARRAY(instanceValue);
+        *value = NUMBER_VAL(array->valueArray.count);
+        return true;
+    }
+
+    if (!IS_INSTANCE(instanceValue)) {
+        runtimeError("Can only get property of instance or array");
+        return false;
+    }
+
+    ObjInstance* instance = AS_INSTANCE(instanceValue);
+
+    if (!tableGet(&instance->fields, propertyName, value)) {
+        char* instanceString = valueToString(instanceValue);
+        char* propertyNameString = valueToString(OBJ_VAL(propertyName));
+        runtimeError("Instance %s does not have property %s",
+            instanceString, propertyNameString);
+        free(instanceString);
+        free(propertyNameString);
+        return false;
+    }
+    return true;
+}
+
 InterpretResult run() {
 #define READ_BYTE() (*frame->ip++)
 #define READ_SHORT() (frame->ip += 2, (uint16_t)((frame->ip[-2] << 8) | frame->ip[-1]))
@@ -370,6 +410,18 @@ InterpretResult run() {
 
             case OP_GET_ARRAY: {
                 Value indexValue = pop();
+
+                if (IS_STRING(indexValue)) {
+                    Value instanceValue = pop();
+                    ObjString* propertyName = AS_STRING(indexValue);
+                    Value value;
+                    if (!getProperty(instanceValue, propertyName, &value)) {
+                        return INTERPRET_RUNTIME_ERROR;
+                    }
+                    push(value);
+                    break;
+                }
+
                 if (!IS_NUMBER(indexValue)) {
                     runtimeError("Index must be a number");
                     return INTERPRET_RUNTIME_ERROR;
@@ -392,6 +444,18 @@ InterpretResult run() {
             case OP_SET_ARRAY: {
                 Value newValue = pop();
                 Value indexValue = pop();
+
+                if (IS_STRING(indexValue)) {
+                    // Field access
+                    Value instanceValue = pop();
+                    ObjString* propertyName = AS_STRING(indexValue);
+                    if (!setProperty(instanceValue, propertyName, newValue)) {
+                        return INTERPRET_RUNTIME_ERROR;
+                    }
+                    push(newValue);
+                    break;
+                }
+
                 if (!IS_NUMBER(indexValue)) {
                     runtimeError("Index must be a number");
                     return INTERPRET_RUNTIME_ERROR;
@@ -474,25 +538,11 @@ InterpretResult run() {
             case OP_GET_PROPERTY: {
                 ObjString* propertyName = READ_STRING();
                 Value instanceValue = pop();
-                if (!IS_INSTANCE(instanceValue)) {
-                    // No array property access yet
-                    runtimeError("Can only access property of instance or array");
+                Value value;
+                if (!getProperty(instanceValue, propertyName, &value)) {
                     return INTERPRET_RUNTIME_ERROR;
                 }
-
-                ObjInstance* instance = AS_INSTANCE(instanceValue);
-                Value propertyValue;
-                if (!tableGet(&instance->fields, propertyName, &propertyValue)) {
-                    char* instanceString = valueToString(instanceValue);
-                    char* propertyNameString = valueToString(OBJ_VAL(propertyName));
-                    runtimeError("Instance %s does not have property %s",
-                        instanceString, propertyNameString);
-                    free(instanceString);
-                    free(propertyNameString);
-                    return INTERPRET_RUNTIME_ERROR;
-                }
-
-                push(propertyValue);
+                push(value);
                 break;
             }
 
@@ -500,18 +550,10 @@ InterpretResult run() {
                 ObjString* propertyName = READ_STRING();
                 Value value = pop();
                 Value instanceValue = pop();
-
-
-                if (!IS_INSTANCE(instanceValue)) {
-                    // No array property access yet
-                    runtimeError("Can only access property of instance or array");
+                if (!setProperty(instanceValue, propertyName, value)) {
                     return INTERPRET_RUNTIME_ERROR;
                 }
-
-                ObjInstance* instance = AS_INSTANCE(instanceValue);
-                tableSet(&instance->fields, propertyName, value);
                 push(value);
-
                 break;
             }
 
@@ -519,7 +561,6 @@ InterpretResult run() {
                 runtimeError("Unrecognized instruction");
                 return INTERPRET_RUNTIME_ERROR;
             }
-
         }
     }
 #undef READ_CONSTANT
