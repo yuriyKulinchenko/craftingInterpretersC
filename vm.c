@@ -2,6 +2,7 @@
 #include "common.h"
 #include <stdio.h>
 #include <stdarg.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "debug.h"
@@ -465,9 +466,58 @@ InterpretResult run() {
             }
 
             case OP_CLASS: {
-                ObjClass* klass = newClass(AS_STRING(READ_CONSTANT()));
+                ObjClass* klass = newClass(READ_STRING());
                 push(OBJ_VAL(klass));
                 break;
+            }
+
+            case OP_GET_PROPERTY: {
+                ObjString* propertyName = READ_STRING();
+                Value instanceValue = pop();
+                if (!IS_INSTANCE(instanceValue)) {
+                    // No array property access yet
+                    runtimeError("Can only access property of instance or array");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+
+                ObjInstance* instance = AS_INSTANCE(instanceValue);
+                Value propertyValue;
+                if (!tableGet(&instance->fields, propertyName, &propertyValue)) {
+                    char* instanceString = valueToString(instanceValue);
+                    char* propertyNameString = valueToString(OBJ_VAL(propertyName));
+                    runtimeError("Instance %s does not have property %s",
+                        instanceString, propertyNameString);
+                    free(instanceString);
+                    free(propertyNameString);
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+
+                push(propertyValue);
+                break;
+            }
+
+            case OP_SET_PROPERTY: {
+                ObjString* propertyName = READ_STRING();
+                Value value = pop();
+                Value instanceValue = pop();
+
+
+                if (!IS_INSTANCE(instanceValue)) {
+                    // No array property access yet
+                    runtimeError("Can only access property of instance or array");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+
+                ObjInstance* instance = AS_INSTANCE(instanceValue);
+                tableSet(&instance->fields, propertyName, value);
+                push(value);
+
+                break;
+            }
+
+            default: {
+                runtimeError("Unrecognized instruction");
+                return INTERPRET_RUNTIME_ERROR;
             }
 
         }

@@ -1,2 +1,5 @@
 class ExampleClass {}
-print ExampleClass(1, 2, 3);
+var instance = ExampleClass();
+instance.x = ExampleClass();
+instance.x.y = 10;
+print instance.x.y;

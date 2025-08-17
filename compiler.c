@@ -132,6 +132,7 @@ static void and_(bool canAssign);
 static void or_(bool canAssign);
 static void call(bool canAssign);
 static void arrayAccess(bool canAssign);
+static void dot(bool canAssign);
 
 static void unary(bool canAssign);
 static void number(bool canAssign);
@@ -168,7 +169,7 @@ ParseRule rules[] = {
     [TOKEN_LEFT_BRACE] = {NULL, NULL, PREC_NONE},
     [TOKEN_RIGHT_BRACE] = {NULL, NULL, PREC_NONE},
     [TOKEN_COMMA] = {NULL, NULL, PREC_NONE},
-    [TOKEN_DOT] = {NULL, NULL, PREC_NONE},
+    [TOKEN_DOT] = {NULL, dot, PREC_CALL},
     [TOKEN_MINUS] = {unary, binary, PREC_TERM},
     [TOKEN_PLUS] = {NULL, binary, PREC_TERM},
     [TOKEN_SEMICOLON] = {NULL, NULL, PREC_NONE},
@@ -543,6 +544,18 @@ static void arrayAccess(bool canAssign) {
 
 static uint8_t identifierConstant(Token* name) {
     return makeConstant(OBJ_VAL(copyString(name->start, name->length)));
+}
+
+static void dot(bool canAssign) {
+    // '.' just consumed
+    consume(TOKEN_IDENTIFIER, "Expect field name after '.'");
+    uint8_t fieldName = identifierConstant(&parser.previous);
+    if (canAssign && match(TOKEN_EQUAL)) {
+        expression();
+        emitBytes(OP_SET_PROPERTY, fieldName);
+    } else {
+        emitBytes(OP_GET_PROPERTY, fieldName);
+    }
 }
 
 static void addLocal(Token name) {
