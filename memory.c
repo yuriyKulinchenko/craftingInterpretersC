@@ -65,6 +65,11 @@ static void freeObject(Obj* object) {
             FREE(ObjUpvalue, object);
             break;
         }
+
+        case OBJ_CLASS: {
+            FREE(ObjClass, object);
+            break;
+        }
     }
 }
 
@@ -166,6 +171,12 @@ static void blackenObject(Obj* object) {
         case OBJ_UPVALUE: {
             const ObjUpvalue* upvalue = (ObjUpvalue*) object;
             markValue(upvalue->closed);
+            break;
+        }
+
+        case OBJ_CLASS: {
+            const ObjClass* class = (ObjClass*) object;
+            markObject((Obj*)class->name);
             break;
         }
 

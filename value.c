@@ -107,6 +107,13 @@ char* objToString(Obj* object) {
         case OBJ_UPVALUE: {
             return strdup("upvalue");
         }
+
+        case OBJ_CLASS: {
+            ObjClass* klass = (ObjClass*) object;
+            asprintf(&returnChars, "class: %s", klass->name->chars);
+            break;
+        }
+
         default: asprintf(&returnChars, "unrecognized object"); break;
     }
     return returnChars;

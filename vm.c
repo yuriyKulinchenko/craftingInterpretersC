@@ -455,6 +455,12 @@ InterpretResult run() {
                 break;
             }
 
+            case OP_CLASS: {
+                ObjClass* klass = newClass(AS_STRING(READ_CONSTANT()));
+                push(OBJ_VAL(klass));
+                break;
+            }
+
         }
     }
 #undef READ_CONSTANT

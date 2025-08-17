@@ -15,12 +15,14 @@
 #define IS_FUNCTION(value) isObjType(value, OBJ_FUNCTION)
 #define IS_ARRAY(value) isObjType(value, OBJ_ARRAY)
 #define IS_CLOSURE(value) isObjType(value, OBJ_CLOSURE)
+#define IS_CLASS(value) isObjType(value, OBJ_CLASS)
 
 #define AS_STRING(value) ((ObjString*)AS_OBJ(value))
 #define AS_CSTRING(value) (((ObjString*)AS_OBJ(value))->chars)
 #define AS_FUNCTION(value) ((ObjFunction*)AS_OBJ(value))
 #define AS_ARRAY(value) ((ObjArray*)AS_OBJ(value))
 #define AS_CLOSURE(value) ((ObjClosure*)AS_OBJ(value))
+#define AS_CLASS(value) ((ObjClass*)AS_OBJ(value))
 
 
 typedef enum {
@@ -29,6 +31,7 @@ typedef enum {
     OBJ_ARRAY,
     OBJ_CLOSURE,
     OBJ_UPVALUE,
+    OBJ_CLASS
 } ObjType;
 
 
@@ -66,6 +69,11 @@ typedef struct {
     ValueArray valueArray;
 } ObjArray;
 
+typedef struct {
+    Obj obj;
+    ObjString* name;
+} ObjClass;
+
 struct ObjString { // Can be safely cast to Obj
     Obj obj;
     int length;
@@ -76,6 +84,7 @@ struct ObjString { // Can be safely cast to Obj
 ObjFunction* newFunction();
 ObjClosure* newClosure(ObjFunction* function);
 ObjUpvalue* newUpvalue(Value* value);
+ObjClass* newClass(ObjString* name);
 
 ObjArray* newArray(Value* values, uint8_t count);
 

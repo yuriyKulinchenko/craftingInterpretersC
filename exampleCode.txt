@@ -1,8 +1,2 @@
-def garbage(count) {
-    var string = "string";
-    for(var i = 0; i < count; i++) {
-        print string + i;
-    }
-}
-
-garbage(10000);
+class ExampleClass {}
+print ExampleClass;

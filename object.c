@@ -110,3 +110,9 @@ ObjArray* newArray(Value* values, uint8_t count) {
     initValueArrayCopy(&array->valueArray, values, count);
     return array;
 }
+
+ObjClass* newClass(ObjString* name) {
+    ObjClass* klass = ALLOCATE_OBJ(ObjClass, OBJ_CLASS);
+    klass->name = name;
+    return klass;
+}
