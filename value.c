@@ -110,7 +110,13 @@ char* objToString(Obj* object) {
 
         case OBJ_CLASS: {
             ObjClass* klass = (ObjClass*) object;
-            asprintf(&returnChars, "class: %s", klass->name->chars);
+            asprintf(&returnChars, "{class:%s}", klass->name->chars);
+            break;
+        }
+
+        case OBJ_INSTANCE: {
+            ObjInstance* instance = (ObjInstance*) object;
+            asprintf(&returnChars, "{%s}", instance->klass->name->chars);
             break;
         }
 

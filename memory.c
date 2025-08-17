@@ -70,6 +70,13 @@ static void freeObject(Obj* object) {
             FREE(ObjClass, object);
             break;
         }
+
+        case OBJ_INSTANCE: {
+            ObjInstance* instance = (ObjInstance*) object;
+            freeTable(&instance->fields);
+            FREE(ObjInstance, object);
+            break;
+        }
     }
 }
 
@@ -177,6 +184,13 @@ static void blackenObject(Obj* object) {
         case OBJ_CLASS: {
             const ObjClass* class = (ObjClass*) object;
             markObject((Obj*)class->name);
+            break;
+        }
+
+        case OBJ_INSTANCE: {
+            ObjInstance* instance = (ObjInstance*) object;
+            markObject((Obj*)instance->klass);
+            markTable(&instance->fields);
             break;
         }
 

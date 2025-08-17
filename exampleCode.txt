@@ -1,2 +1,2 @@
 class ExampleClass {}
-print ExampleClass;
+print ExampleClass(1, 2, 3);

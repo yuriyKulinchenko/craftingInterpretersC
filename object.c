@@ -116,3 +116,10 @@ ObjClass* newClass(ObjString* name) {
     klass->name = name;
     return klass;
 }
+
+ObjInstance* newInstance(ObjClass* klass) {
+    ObjInstance* instance = ALLOCATE_OBJ(ObjInstance, OBJ_INSTANCE);
+    instance->klass = klass;
+    initTable(&instance->fields);
+    return instance;
+}

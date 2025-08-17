@@ -342,8 +342,17 @@ InterpretResult run() {
                         break;
                     }
 
+                    case OBJ_CLASS: {
+                        // TEMPORARY: Does not take into account passing of params
+                        ObjClass* klass = (ObjClass*) callable;
+                        ObjInstance* instance = newInstance(klass);
+                        pop(); // Remove class
+                        push(OBJ_VAL(instance));
+                        break;
+                    }
+
                     default: {
-                        runtimeError("Can only call functions");
+                        runtimeError("Can only call functions or classes");
                         return INTERPRET_RUNTIME_ERROR;
                     }
                 }
