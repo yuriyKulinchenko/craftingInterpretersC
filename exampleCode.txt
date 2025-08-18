@@ -1,5 +1,9 @@
-class Example {}
-var instance = Example();
-instance["x"] = "Example value";
-print instance["x"];
-print ([] << 0 << 1 << 2).length;
+class Example {
+    exampleMethod1() {
+
+    }
+
+    exampleMethod2() {
+
+    }
+}

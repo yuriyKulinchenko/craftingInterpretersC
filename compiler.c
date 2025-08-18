@@ -830,16 +830,30 @@ static void block() {
     endScope();
 }
 
+static void method() {
+    consume(TOKEN_IDENTIFIER, "Expect method name");
+    uint8_t methodName = identifierConstant(&parser.previous);
+    FunctionType type = TYPE_FUNCTION;
+    function(type); // emits OP_CLOSURE
+    emitBytes(OP_METHOD, methodName);
+}
+
 static void classDeclaration() {
     consume(TOKEN_IDENTIFIER, "Expect class name.");
+    Token className = parser.previous;
     uint8_t nameConstant = identifierConstant(&parser.previous);
-    declareVariable();
 
+
+    declareVariable();
     emitBytes(OP_CLASS, nameConstant);
     defineVariable(nameConstant);
-
+    namedVariable(className, false);
     consume(TOKEN_LEFT_BRACE, "Expect '{' at start of class declaration");
+    while (!check(TOKEN_RIGHT_BRACE) && !check(TOKEN_EOF)) {
+        method();
+    }
     consume(TOKEN_RIGHT_BRACE, "Expect '}' at start of class declaration");
+    emitByte(OP_POP);
 }
 
 static void declaration() {
