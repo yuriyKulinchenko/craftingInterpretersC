@@ -612,18 +612,24 @@ InterpretResult run() {
             }
 
             case OP_INVOKE: {
-                // For now, assume all OP_INVOKE instructions reference a valid method
                 ObjString* methodName = READ_STRING();
                 uint8_t argumentCount = READ_BYTE();
 
                 ObjInstance* instance = AS_INSTANCE(peek(argumentCount));
                 Value methodValue;
                 if (!tableGet(&instance->klass->methods, methodName, &methodValue)) {
-                    runtimeError("Method does not exist");
-                    return INTERPRET_RUNTIME_ERROR;
+                    // Check if callable attribute exists
+                    if (!tableGet(&instance->fields, methodName, &methodValue)) {
+                        runtimeError("Method / function field does not exist");
+                        return INTERPRET_RUNTIME_ERROR;
+                    }
+
+                    vm.stackTop[-argumentCount - 1] = methodValue;
+                } else {
+                    vm.stackTop[-argumentCount - 1] = OBJ_VAL(instance);
                 }
+
                 ObjClosure* closure = AS_CLOSURE(methodValue);
-                vm.stackTop[-argumentCount - 1] = OBJ_VAL(instance);
                 if (!addFrame(closure, argumentCount)) return INTERPRET_RUNTIME_ERROR;
 
                 break;

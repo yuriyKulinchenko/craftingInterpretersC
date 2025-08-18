@@ -1,8 +1,5 @@
-class Example {
-    sum(x, y) {
-        print x + y;
-    }
-}
+class Example { }
 
 var instance = Example();
-instance.sum(1,2);
+instance.f = fun (x, y) -> x + y;
+print instance.f(1, 2);

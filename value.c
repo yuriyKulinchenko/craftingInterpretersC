@@ -167,17 +167,15 @@ ObjString* valueKey(Value value) {
     char* returnString;
     char* prefix;
     switch (value.type) {
-        case VAL_NIL: prefix = "NIL"; break;
-        case VAL_NUMBER: prefix = "NUMBER"; break;
-        case VAL_BOOL: prefix = "BOOL"; break;
-        case VAL_OBJ: {
-            return NULL;
-            // if (IS_STRING(value)) {prefix = ""; break;}
-        }
+        case VAL_NIL: prefix = "NIL:"; break;
+        case VAL_NUMBER: prefix = "NUMBER:"; break;
+        case VAL_BOOL: prefix = "BOOL:"; break;
+        case VAL_OBJ: if (IS_STRING(value)) {prefix = ""; break;}
+
         default: return NULL;
     }
 
-    asprintf(&returnString, "%s:%s", prefix, valueString);
+    asprintf(&returnString, "%s%s", prefix, valueString);
     free(valueString);
     return takeString(returnString, (int) strlen(returnString));
 }
