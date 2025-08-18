@@ -1,12 +1,8 @@
-class Person {
-    init(name) {
-        this.name = name;
-    }
-
-    speak() {
-        print "Hello, my name is " + this.name;
+class Example {
+    sum(x, y) {
+        print x + y;
     }
 }
 
-var instance = Person("Jane");
-instance.speak();
+var instance = Example();
+instance.sum(1,2);

@@ -582,7 +582,20 @@ static void dot(bool canAssign) {
         expression();
         emitBytes(OP_SET_PROPERTY, fieldName);
     } else {
-        emitBytes(OP_GET_PROPERTY, fieldName);
+        if (match(TOKEN_LEFT_PAREN)) {
+            uint8_t argumentCount = 0;
+            if (!check(TOKEN_RIGHT_PAREN)) {
+                do {
+                    expression();
+                    argumentCount++;
+                } while (match(TOKEN_COMMA));
+            }
+            consume(TOKEN_RIGHT_PAREN, "Expect ')' at end of function call");
+            emitBytes(OP_INVOKE, fieldName);
+            emitByte(argumentCount);
+        } else {
+            emitBytes(OP_GET_PROPERTY, fieldName);
+        }
     }
 }
 

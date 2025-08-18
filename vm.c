@@ -612,6 +612,10 @@ InterpretResult run() {
                 break;
             }
 
+            case OP_INVOKE: {
+                break;
+            }
+
             default: {
                 runtimeError("Unrecognized instruction");
                 return INTERPRET_RUNTIME_ERROR;
