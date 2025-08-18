@@ -172,6 +172,17 @@ static bool setProperty(Value instanceValue, ObjString* propertyName, Value valu
     return true;
 }
 
+static bool bindMethod(ObjClass* klass, ObjString* name, Value receiver, Value* value) {
+    Value methodValue;
+    if (!tableGet(&klass->methods, name, &methodValue)) return false;
+    ObjClosure* method = AS_CLOSURE(methodValue);
+
+    ObjBoundMethod* boundMethod = newBoundMethod(receiver, method);
+
+    *value = OBJ_VAL(boundMethod);
+    return true;
+}
+
 static bool getProperty(Value instanceValue, ObjString* propertyName, Value* value) {
     if (IS_ARRAY(instanceValue)) {
         if (propertyName->length != 6 || memcmp(propertyName->chars, "length", 6) != 0) {
@@ -191,13 +202,16 @@ static bool getProperty(Value instanceValue, ObjString* propertyName, Value* val
     ObjInstance* instance = AS_INSTANCE(instanceValue);
 
     if (!tableGet(&instance->fields, propertyName, value)) {
-        char* instanceString = valueToString(instanceValue);
-        char* propertyNameString = valueToString(OBJ_VAL(propertyName));
-        runtimeError("Instance %s does not have property %s",
-            instanceString, propertyNameString);
-        free(instanceString);
-        free(propertyNameString);
-        return false;
+        // Potentially accessing a method
+        if (!bindMethod(instance->klass, propertyName, instanceValue, value)) {
+            char* instanceString = valueToString(instanceValue);
+            char* propertyNameString = valueToString(OBJ_VAL(propertyName));
+            runtimeError("Instance %s does not have property / method %s",
+                instanceString, propertyNameString);
+            free(instanceString);
+            free(propertyNameString);
+            return false;
+        }
     }
     return true;
 }

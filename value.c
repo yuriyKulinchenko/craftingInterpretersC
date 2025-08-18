@@ -93,12 +93,23 @@ char* objToString(Obj* object) {
             asprintf(&returnChars, "<%s>", chars);
             break;
         }
+
         case OBJ_FUNCTION: {
             const ObjFunction* function = (ObjFunction*) object;
             char* chars = function->name == NULL ? "script" : function->name->chars;
             asprintf(&returnChars, "<raw:%s>", chars);
             break;
         }
+
+        case OBJ_BOUND_METHOD: {
+            const ObjBoundMethod* boundMethod = (ObjBoundMethod*) object;
+            char* chars = boundMethod->method->function->name->chars;
+            asprintf(&returnChars, "<bound:%s>", chars);
+            break;
+
+            return objToString((Obj*)boundMethod->method);
+        }
+
         case OBJ_ARRAY: {
             ObjArray* array = (ObjArray*) object;
             return arrayToString(array);
@@ -118,11 +129,6 @@ char* objToString(Obj* object) {
             const ObjInstance* instance = (ObjInstance*) object;
             asprintf(&returnChars, "{%s}", instance->klass->name->chars);
             break;
-        }
-
-        case OBJ_BOUND_METHOD: {
-            const ObjBoundMethod* boundMethod = (ObjBoundMethod*) object;
-            return objToString((Obj*)boundMethod->method);
         }
 
         default: asprintf(&returnChars, "unrecognized object"); break;
