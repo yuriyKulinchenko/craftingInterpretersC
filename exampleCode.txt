@@ -6,4 +6,8 @@ class Example {
     exampleMethod2() {
 
     }
+
+    exampleMethod3() {
+
+    }
 }

@@ -202,6 +202,13 @@ static bool getProperty(Value instanceValue, ObjString* propertyName, Value* val
     return true;
 }
 
+static void defineMethod(ObjString* name) {
+    Value method = peek(0);
+    ObjClass* klass = AS_CLASS(peek(1));
+    tableSet(&klass->methods, name, method);
+    pop();
+}
+
 InterpretResult run() {
 #define READ_BYTE() (*frame->ip++)
 #define READ_SHORT() (frame->ip += 2, (uint16_t)((frame->ip[-2] << 8) | frame->ip[-1]))
@@ -554,6 +561,11 @@ InterpretResult run() {
                     return INTERPRET_RUNTIME_ERROR;
                 }
                 push(value);
+                break;
+            }
+
+            case OP_METHOD: {
+                defineMethod(READ_STRING());
                 break;
             }
 
