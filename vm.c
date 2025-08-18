@@ -413,8 +413,16 @@ InterpretResult run() {
                         break;
                     }
 
+                    case OBJ_BOUND_METHOD: {
+                        ObjBoundMethod* boundMethod = (ObjBoundMethod*) callable;
+                        vm.stackTop[-argumentCount - 1] = boundMethod->receiver;
+                        bool callSuccess = addFrame(boundMethod->method, argumentCount);
+                        if (!callSuccess) return INTERPRET_RUNTIME_ERROR;
+                        break;
+                    }
+
                     default: {
-                        runtimeError("Can only call functions or classes");
+                        runtimeError("Can only call functions, methods or classes");
                         return INTERPRET_RUNTIME_ERROR;
                     }
                 }

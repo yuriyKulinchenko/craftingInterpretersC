@@ -57,7 +57,8 @@ typedef struct {
 typedef enum {
     TYPE_FUNCTION,
     TYPE_ANONYMOUS,
-    TYPE_SCRIPT
+    TYPE_SCRIPT,
+    TYPE_METHOD,
 } FunctionType;
 
 typedef struct {
@@ -122,8 +123,14 @@ void initCompiler(Compiler* compiler, FunctionType type) {
     Local* local = &current->locals[current->localCount++];
     local->depth = 0;
     local->isCaptured = false;
-    local->name.start = "";
-    local->name.length = 0;
+
+    if (type == TYPE_METHOD) {
+        local->name.start = "this";
+        local->name.length = 4;
+    } else {
+        local->name.start = "";
+        local->name.length = 0;
+    }
 }
 
 static void binary(bool canAssign);
@@ -142,6 +149,7 @@ static void grouping(bool canAssign);
 static void variable(bool canAssign);
 static void anonymousFunction(bool canAssign);
 static void array(bool canAssign);
+static void this_(bool canAssign);
 
 static void expression();
 static void declaration();
@@ -198,7 +206,7 @@ ParseRule rules[] = {
     [TOKEN_PRINT] = {NULL, NULL, PREC_NONE},
     [TOKEN_RETURN] = {NULL, NULL, PREC_NONE},
     [TOKEN_SUPER] = {NULL, NULL, PREC_NONE},
-    [TOKEN_THIS] = {NULL, NULL, PREC_NONE},
+    [TOKEN_THIS] = {this_, NULL, PREC_NONE},
     [TOKEN_TRUE] = {literal, NULL, PREC_NONE},
     [TOKEN_VAR] = {NULL, NULL, PREC_NONE},
     [TOKEN_WHILE] = {NULL, NULL, PREC_NONE},
@@ -424,6 +432,10 @@ static void array(bool canAssign) {
     }
     consume(TOKEN_RIGHT_SQUARE, "Expect ']' at end of array");
     emitBytes(OP_CREATE_ARRAY, (uint8_t) arraySize);
+}
+
+static void this_(bool canAssign) {
+    variable(false);
 }
 
 static void parsePrecedence(Precedence precedence) {
@@ -833,7 +845,7 @@ static void block() {
 static void method() {
     consume(TOKEN_IDENTIFIER, "Expect method name");
     uint8_t methodName = identifierConstant(&parser.previous);
-    FunctionType type = TYPE_FUNCTION;
+    FunctionType type = TYPE_METHOD;
     function(type); // emits OP_CLOSURE
     emitBytes(OP_METHOD, methodName);
 }

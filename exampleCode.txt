@@ -1,15 +1,11 @@
-class Example {
-    exampleMethod1() {
-
-    }
-
-    exampleMethod2() {
-
-    }
-
-    exampleMethod3() {
-
+class Person {
+    getName() {
+        return this.name;
     }
 }
 
-print Example().exampleMethod1;
+var person = Person();
+person.name = "Jane";
+print person.getName();
+
+
