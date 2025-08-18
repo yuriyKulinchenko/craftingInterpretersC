@@ -1,11 +1,12 @@
 class Person {
-    getName() {
-        return this.name;
+    init(name) {
+        this.name = name;
+    }
+
+    speak() {
+        print "Hello, my name is " + this.name;
     }
 }
 
-var person = Person();
-person.name = "Jane";
-print person.getName();
-
-
+var instance = Person("Jane");
+instance.speak();

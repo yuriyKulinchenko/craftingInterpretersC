@@ -170,7 +170,10 @@ ObjString* valueKey(Value value) {
         case VAL_NIL: prefix = "NIL"; break;
         case VAL_NUMBER: prefix = "NUMBER"; break;
         case VAL_BOOL: prefix = "BOOL"; break;
-        case VAL_OBJ: if (IS_STRING(value)) {prefix = ""; break;}
+        case VAL_OBJ: {
+            return NULL;
+            // if (IS_STRING(value)) {prefix = ""; break;}
+        }
         default: return NULL;
     }
 

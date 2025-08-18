@@ -59,6 +59,7 @@ typedef enum {
     TYPE_ANONYMOUS,
     TYPE_SCRIPT,
     TYPE_METHOD,
+    TYPE_INITIALIZER,
 } FunctionType;
 
 typedef struct {
@@ -86,10 +87,16 @@ typedef struct {
     int lambdaCount;
 } GlobalCompilerState;
 
+typedef struct ClassCompiler {
+    struct ClassCompiler* enclosing;
+    Token name;
+} ClassCompiler;
+
 
 GlobalCompilerState globalCompilerState = {.lambdaCount = 0};
 Parser parser;
 Compiler* current = NULL;
+ClassCompiler* currentClass = NULL;
 
 void initCompiler(Compiler* compiler, FunctionType type) {
     compiler->enclosing = current;
@@ -124,7 +131,7 @@ void initCompiler(Compiler* compiler, FunctionType type) {
     local->depth = 0;
     local->isCaptured = false;
 
-    if (type == TYPE_METHOD) {
+    if (type == TYPE_METHOD || type == TYPE_INITIALIZER) {
         local->name.start = "this";
         local->name.length = 4;
     } else {
@@ -335,12 +342,17 @@ static void emitBytes(uint8_t byte1, uint8_t byte2) {
 }
 
 static void emitReturn() {
-    emitBytes(OP_NIL, OP_RETURN);
+    if (current->type == TYPE_INITIALIZER) {
+        emitBytes(OP_GET_LOCAL, 0);
+    } else {
+        emitByte(OP_NIL);
+    }
+    emitByte(OP_RETURN);
 }
 
 static ObjFunction* endCompiler() {
-    freeTable(&current->constants);
     emitReturn();
+    freeTable(&current->constants);
     ObjFunction* function = current->function;
 #ifdef DEBUG_PRINT_CODE
     if (!parser.hadError) {
@@ -435,6 +447,10 @@ static void array(bool canAssign) {
 }
 
 static void this_(bool canAssign) {
+    if (currentClass == NULL) {
+        error("Can only use 'this' keyword inside of class");
+        return;
+    }
     variable(false);
 }
 
@@ -805,6 +821,9 @@ static void expressionStatement() {
 }
 
 static void returnStatement() {
+    if (current->type == TYPE_INITIALIZER) {
+        error("Cannot return from initializer");
+    }
     if (match(TOKEN_SEMICOLON)) {
         emitByte(OP_NIL);
     } else {
@@ -845,7 +864,13 @@ static void block() {
 static void method() {
     consume(TOKEN_IDENTIFIER, "Expect method name");
     uint8_t methodName = identifierConstant(&parser.previous);
-    FunctionType type = TYPE_METHOD;
+    FunctionType type;
+    if (parser.previous.length == 4 && memcmp(parser.previous.start, "init", 4) == 0) {
+        type = TYPE_INITIALIZER;
+    } else {
+        type = TYPE_METHOD;
+    }
+
     function(type); // emits OP_CLOSURE
     emitBytes(OP_METHOD, methodName);
 }
@@ -859,6 +884,10 @@ static void classDeclaration() {
     declareVariable();
     emitBytes(OP_CLASS, nameConstant);
     defineVariable(nameConstant);
+    ClassCompiler classCompiler = {.enclosing = currentClass, .name = parser.previous};
+    currentClass = &classCompiler;
+
+
     namedVariable(className, false);
     consume(TOKEN_LEFT_BRACE, "Expect '{' at start of class declaration");
     while (!check(TOKEN_RIGHT_BRACE) && !check(TOKEN_EOF)) {
@@ -866,6 +895,7 @@ static void classDeclaration() {
     }
     consume(TOKEN_RIGHT_BRACE, "Expect '}' at start of class declaration");
     emitByte(OP_POP);
+    currentClass = currentClass->enclosing;
 }
 
 static void declaration() {

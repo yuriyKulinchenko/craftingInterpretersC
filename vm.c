@@ -45,6 +45,7 @@ void initVM() {
 
     initTable(&vm.strings);
     initTable(&vm.globals);
+    vm.initString = copyString("init", 4);
 }
 
 void freeVM() {
@@ -219,7 +220,12 @@ static bool getProperty(Value instanceValue, ObjString* propertyName, Value* val
 static void defineMethod(ObjString* name) {
     Value method = peek(0);
     ObjClass* klass = AS_CLASS(peek(1));
-    tableSet(&klass->methods, name, method);
+
+    if (name == vm.initString) {
+        klass->initializer = method;
+    } else {
+        tableSet(&klass->methods, name, method);
+    }
     pop();
 }
 
@@ -405,11 +411,26 @@ InterpretResult run() {
                     }
 
                     case OBJ_CLASS: {
-                        // TEMPORARY: Does not take into account passing of params
                         ObjClass* klass = (ObjClass*) callable;
                         ObjInstance* instance = newInstance(klass);
-                        pop(); // Remove class
-                        push(OBJ_VAL(instance));
+                        Value instanceVal = OBJ_VAL(instance);
+
+                        // Check for initializer:
+                        if (IS_NIL(klass->initializer)) {
+                            if (argumentCount != 0) {
+                              runtimeError("No initializer has been declared for this class");
+                              return INTERPRET_RUNTIME_ERROR;
+                            }
+                            pop(); // Remove class
+                            push(instanceVal);
+                            break;
+
+                        }
+
+                        ObjClosure* initializer = AS_CLOSURE(klass->initializer);
+                        vm.stackTop[-argumentCount - 1] = instanceVal;
+                        bool callSuccess = addFrame(initializer, argumentCount);
+                        if (!callSuccess) return INTERPRET_RUNTIME_ERROR;
                         break;
                     }
 
