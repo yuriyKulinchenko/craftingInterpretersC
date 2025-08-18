@@ -124,3 +124,10 @@ ObjInstance* newInstance(ObjClass* klass) {
     initTable(&instance->fields);
     return instance;
 }
+
+ObjBoundMethod* newBoundMethod(Value receiver, ObjClosure* method) {
+    ObjBoundMethod* boundMethod = ALLOCATE_OBJ(ObjBoundMethod, OBJ_BOUND_METHOD);
+    boundMethod->receiver = receiver;
+    boundMethod->method = method;
+    return boundMethod;
+}
