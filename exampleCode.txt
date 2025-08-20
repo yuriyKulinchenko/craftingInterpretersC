@@ -1,13 +1,12 @@
 class Parent {
-    speak() {
-        print "I am the parent class";
+    speak(x) {
+        print x;
     }
 }
 class Child < Parent {
-    speak() {
-            print "I am the child class";
-            super.speak();
+    speak(x) {
+        super.speak(x);
     }
 }
 
-Child().speak();
+Child().speak("Hello");

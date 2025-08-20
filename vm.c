@@ -665,6 +665,19 @@ InterpretResult run() {
                 break;
             }
 
+            case OP_SUPER_INVOKE: {
+                //[this][x][y]...[super]
+                ObjClass* superclass = AS_CLASS(pop());
+                ObjString* methodName = READ_STRING();
+                Value methodValue;
+                if (!tableGet(&superclass->methods, methodName, &methodValue)) {
+                    runtimeError("Superclass does not have method: %s", methodName);
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                addFrame(AS_CLOSURE(methodValue), READ_BYTE());
+                break;
+            }
+
             default: {
                 runtimeError("Unrecognized instruction");
                 return INTERPRET_RUNTIME_ERROR;

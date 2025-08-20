@@ -465,8 +465,22 @@ static void super_(bool canAssign) {
     consume(TOKEN_IDENTIFIER, "Expect method name after super");
     uint8_t methodName = identifierConstant(&parser.previous);
     namedVariable(syntheticToken("this"), false);
-    namedVariable(syntheticToken("super"), false);
-    emitBytes(OP_GET_SUPER, methodName);
+    if (match(TOKEN_LEFT_PAREN)) {
+        uint8_t argumentCount = 0;
+        if (!check(TOKEN_RIGHT_PAREN)) {
+            do {
+                expression();
+                argumentCount++;
+            } while (match(TOKEN_COMMA));
+        }
+        consume(TOKEN_RIGHT_PAREN, "Expect ')' after super call");
+        namedVariable(syntheticToken("super"), false);
+        emitBytes(OP_SUPER_INVOKE, methodName);
+        emitByte(argumentCount);
+    } else {
+        namedVariable(syntheticToken("super"), false);
+        emitBytes(OP_GET_SUPER, methodName);
+    }
 }
 
 static void parsePrecedence(Precedence precedence) {
