@@ -27,7 +27,7 @@ Entry* findEntry(Entry* entries, int capacity, ObjString* key) {
     // If this is not present, returns first empty slot
     // If any tombstones are encountered on the way, the tombstone is returned
     Entry* tombstone = NULL;
-    uint32_t index =  key->hash % capacity;
+    uint32_t index =  key->hash & capacity - 1;
     for (;;) {
         Entry* entry = &entries[index];
 
@@ -42,7 +42,7 @@ Entry* findEntry(Entry* entries, int capacity, ObjString* key) {
 
         if (entry->key == key) return entry;
 
-        index = (index + 1) % capacity;
+        index = index + 1 & capacity - 1;
     }
 }
 
