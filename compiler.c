@@ -90,6 +90,7 @@ typedef struct {
 typedef struct ClassCompiler {
     struct ClassCompiler* enclosing;
     Token name;
+    bool hasSuperclass;
 } ClassCompiler;
 
 
@@ -157,6 +158,7 @@ static void variable(bool canAssign);
 static void anonymousFunction(bool canAssign);
 static void array(bool canAssign);
 static void this_(bool canAssign);
+static void super_(bool canAssign);
 
 static void expression();
 static void declaration();
@@ -171,6 +173,10 @@ static void patchJump(int offset);
 static int emitJump(uint8_t instruction);
 
 static void emitLoop(int loopStart);
+
+static uint8_t identifierConstant(Token* name);
+static void namedVariable(Token name, bool canAssign);
+static Token syntheticToken(const char* name);
 
 static ParseRule* getRule(TokenType type);
 static void parsePrecedence(Precedence precedence);
@@ -212,7 +218,7 @@ ParseRule rules[] = {
     [TOKEN_OR] = {NULL, or_, PREC_OR},
     [TOKEN_PRINT] = {NULL, NULL, PREC_NONE},
     [TOKEN_RETURN] = {NULL, NULL, PREC_NONE},
-    [TOKEN_SUPER] = {NULL, NULL, PREC_NONE},
+    [TOKEN_SUPER] = {super_, NULL, PREC_NONE},
     [TOKEN_THIS] = {this_, NULL, PREC_NONE},
     [TOKEN_TRUE] = {literal, NULL, PREC_NONE},
     [TOKEN_VAR] = {NULL, NULL, PREC_NONE},
@@ -452,6 +458,15 @@ static void this_(bool canAssign) {
         return;
     }
     variable(false);
+}
+
+static void super_(bool canAssign) {
+    consume(TOKEN_DOT, "Expect '.' after super call");
+    consume(TOKEN_IDENTIFIER, "Expect method name after super");
+    uint8_t methodName = identifierConstant(&parser.previous);
+    namedVariable(syntheticToken("this"), false);
+    namedVariable(syntheticToken("super"), false);
+    emitBytes(OP_GET_SUPER, methodName);
 }
 
 static void parsePrecedence(Precedence precedence) {
@@ -888,6 +903,16 @@ static void method() {
     emitBytes(OP_METHOD, methodName);
 }
 
+static Token syntheticToken(const char* name) {
+    Token token;
+    token.start = name;
+    token.length = (int)strlen(name);
+    token.type = TOKEN_IDENTIFIER; // Temporary
+    token.line = -1;
+    return token;
+}
+
+
 static void classDeclaration() {
     consume(TOKEN_IDENTIFIER, "Expect class name");
     Token className = parser.previous;
@@ -903,8 +928,19 @@ static void classDeclaration() {
     if (match(TOKEN_LESS)) {
         consume(TOKEN_IDENTIFIER, "Expect superclass name");
         variable(false);
+
+
+        beginScope();
+        addLocal(syntheticToken("super"));
+        defineVariable(0);
+        classCompiler.hasSuperclass = true;
+        // The code above allows 'super' to be accessed as an upvalue
+
+
         namedVariable(className, false);
         emitByte(OP_INHERIT);
+    } else {
+        classCompiler.hasSuperclass = false;
     }
 
     namedVariable(className, false);
@@ -914,6 +950,12 @@ static void classDeclaration() {
     }
     consume(TOKEN_RIGHT_BRACE, "Expect '}' at start of class declaration");
     emitByte(OP_POP);
+
+    if (classCompiler.hasSuperclass) {
+        endScope();
+    }
+
+
     currentClass = currentClass->enclosing;
 }
 

@@ -3,6 +3,11 @@ class Parent {
         print "I am the parent class";
     }
 }
-class Child < Parent {}
+class Child < Parent {
+    speak() {
+            print "I am the child class";
+            super.speak();
+    }
+}
 
 Child().speak();
