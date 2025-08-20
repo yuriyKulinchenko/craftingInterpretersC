@@ -889,7 +889,7 @@ static void method() {
 }
 
 static void classDeclaration() {
-    consume(TOKEN_IDENTIFIER, "Expect class name.");
+    consume(TOKEN_IDENTIFIER, "Expect class name");
     Token className = parser.previous;
     uint8_t nameConstant = identifierConstant(&parser.previous);
 
@@ -900,6 +900,12 @@ static void classDeclaration() {
     ClassCompiler classCompiler = {.enclosing = currentClass, .name = parser.previous};
     currentClass = &classCompiler;
 
+    if (match(TOKEN_LESS)) {
+        consume(TOKEN_IDENTIFIER, "Expect superclass name");
+        variable(false);
+        namedVariable(className, false);
+        emitByte(OP_INHERIT);
+    }
 
     namedVariable(className, false);
     consume(TOKEN_LEFT_BRACE, "Expect '{' at start of class declaration");

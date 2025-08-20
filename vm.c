@@ -635,6 +635,20 @@ InterpretResult run() {
                 break;
             }
 
+            case OP_INHERIT: {
+                Value superclassValue = peek(1);
+                if (!IS_CLASS(superclassValue)) {
+                    runtimeError("Can only inherit from another class");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                ObjClass* superclass = AS_CLASS(superclassValue);
+                ObjClass* subclass = AS_CLASS(peek(0));
+
+                tableAddAll(&superclass->methods, &subclass->methods);
+                pop();
+                break;
+            }
+
             default: {
                 runtimeError("Unrecognized instruction");
                 return INTERPRET_RUNTIME_ERROR;

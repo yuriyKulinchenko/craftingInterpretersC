@@ -1,5 +1,8 @@
-class Example { }
+class Parent {
+    speak() {
+        print "I am the parent class";
+    }
+}
+class Child < Parent {}
 
-var instance = Example();
-instance.f = fun (x, y) -> x + y;
-print instance.f(1, 2);
+Child().speak();
